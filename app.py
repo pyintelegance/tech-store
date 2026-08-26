@@ -9,6 +9,7 @@
   app.py         — роуты, CSRF, админ-панель
 """
 import functools
+import json
 import os
 import secrets
 import uuid
@@ -20,10 +21,11 @@ from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 
 import config
+import database as db
 import repository as repo
 from database import get_conn
 from forms import (csrf, CheckoutForm, LoginForm, ProductForm,
-                   CategoryForm, CityForm)
+                   CategoryForm, CityForm, CouponForm)
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = config.SECRET_KEY
@@ -177,6 +179,47 @@ TRANSLATIONS = {
         "card_original": "Только оригинал",
         "popular_title": "Хиты продаж",
         "all_title": "Каталог товаров",
+        "reviews_title": "Отзывы покупателей",
+        "write_review": "Оставить отзыв",
+        "your_name": "Ваше имя",
+        "your_rating": "Оценка",
+        "your_review": "Ваш отзыв",
+        "send_review": "Отправить отзыв",
+        "review_submitted": "Спасибо! Отзыв отправлен на проверку",
+        "no_reviews": "Отзывов пока нет — будьте первым!",
+        "specs_title": "Характеристики",
+        "gallery": "Фотографии",
+        "coupon": "Промокод",
+        "coupon_ph": "Например: WELCOME10",
+        "coupon_apply": "Применить",
+        "coupon_applied": "Промокод применён",
+        "coupon_invalid": "Промокод не найден",
+        "coupon_remove": "Убрать",
+        "discount": "Скидка",
+        "subtotal": "Товары",
+        "dashboard": "Дашборд",
+        "analytics": "Аналитика",
+        "stat_orders": "Заказов",
+        "stat_revenue": "Выручка",
+        "stat_new": "Новые",
+        "stat_products_admin": "Товаров",
+        "stat_reviews": "Отзывов",
+        "sales_14d": "Продажи за 14 дней",
+        "top_products": "Топ товаров",
+        "recent_orders": "Последние заказы",
+        "review_approved": "Отзыв одобрен",
+        "review_deleted": "Отзыв удалён",
+        "coupon_saved": "Промокод сохранён",
+        "coupon_deleted": "Промокод удалён",
+        "coupons_list": "Промокоды",
+        "code": "Код",
+        "percent": "Скидка %",
+        "active": "Активен",
+        "disabled": "Выключен",
+        "toggle": "Вкл/выкл",
+        "add_coupon": "Добавить промокод",
+        "specs_label": "Характеристики (каждая строка: Ключ: значение)",
+        "gallery_label": "Дополнительные фото (несколько)",
     },
     "uz": {
         "brand": "TechStore",
@@ -323,6 +366,47 @@ TRANSLATIONS = {
         "card_original": "Faqat original",
         "popular_title": "Eng ommabop",
         "all_title": "Tovarlar katalogi",
+        "reviews_title": "Mijozlar sharhlari",
+        "write_review": "Sharh qoldirish",
+        "your_name": "Ismingiz",
+        "your_rating": "Baholash",
+        "your_review": "Sizning sharhingiz",
+        "send_review": "Yuborish",
+        "review_submitted": "Rahmat! Sharh tekshiruvga yuborildi",
+        "no_reviews": "Hozircha sharhlar yo'q — birinchi bo'ling!",
+        "specs_title": "Xususiyatlari",
+        "gallery": "Rasmlar",
+        "coupon": "Promokod",
+        "coupon_ph": "Masalan: WELCOME10",
+        "coupon_apply": "Qo'llash",
+        "coupon_applied": "Promokod qo'llandi",
+        "coupon_invalid": "Promokod topilmadi",
+        "coupon_remove": "Olib tashlash",
+        "discount": "Chegirma",
+        "subtotal": "Mahsulotlar",
+        "dashboard": "Dashboard",
+        "analytics": "Analitika",
+        "stat_orders": "Buyurtmalar",
+        "stat_revenue": "Daromad",
+        "stat_new": "Yangi",
+        "stat_products_admin": "Mahsulotlar",
+        "stat_reviews": "Sharhlar",
+        "sales_14d": "14 kunlik savdo",
+        "top_products": "Eng ko'p sotilganlar",
+        "recent_orders": "Oxirgi buyurtmalar",
+        "review_approved": "Sharh tasdiqlandi",
+        "review_deleted": "Sharh o'chirildi",
+        "coupon_saved": "Promokod saqlandi",
+        "coupon_deleted": "Promokod o'chirildi",
+        "coupons_list": "Promokodlar",
+        "code": "Kod",
+        "percent": "Chegirma %",
+        "active": "Faol",
+        "disabled": "O'chirilgan",
+        "toggle": "Yoqish/o'chirish",
+        "add_coupon": "Promokod qo'shish",
+        "specs_label": "Xususiyatlar (har qator: Kalit: qiymat)",
+        "gallery_label": "Qo'shimcha rasmlar (bir nechta)",
     },
 }
 
@@ -442,13 +526,32 @@ def index():
     )
 
 
-@app.route("/product/<int:pid>")
+@app.route("/product/<int:pid>", methods=["GET", "POST"])
 def product(pid):
     p = repo.get_product(pid)
     if not p:
         abort(404)
+
+    # Отзыв (POST)
+    if request.method == "POST":
+        name = request.form.get("review_name", "").strip()
+        rating = request.form.get("review_rating", "")
+        text = request.form.get("review_text", "").strip()
+        if name and rating.isdigit() and text:
+            rating = int(rating)
+            if 1 <= rating <= 5:
+                repo.create_review(pid, name, rating, text)
+                flash(t("review_submitted"), "ok")
+        return redirect(url_for("product", pid=pid))
+
     related = repo.get_related(pid, p["category_id"])
-    return render_template("product.html", p=p, related=related)
+    images = repo.get_product_images(pid)
+    specs = repo.parse_specs(p.get("specs"))
+    reviews = repo.get_reviews(pid, approved_only=True)
+    return render_template(
+        "product.html", p=p, related=related, images=images,
+        specs=specs, reviews=reviews,
+    )
 
 
 # ---------- Корзина ----------
@@ -499,6 +602,38 @@ def cart_remove():
 
 # ---------- Оформление заказа ----------
 
+def send_telegram_notification(order):
+    """Отправляет уведомление о заказе в Telegram (если настроено)."""
+    if not config.TELEGRAM_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:
+        return False
+    try:
+        items_text = "\n".join(
+            f"  • {it['product_name']} × {it['quantity']} — {money(it['price'] * it['quantity'])} UZS"
+            for it in repo.get_order_items(order["id"])
+        )
+        message = (
+            f"🛒 <b>НОВЫЙ ЗАКАЗ #{order['id']}</b>\n\n"
+            f"👤 {order['customer_name']}\n"
+            f"📞 {order['phone']}\n"
+            f"🏙 {order['city']}\n"
+            f"📍 {order['address']}"
+            + (f"\n➕ {order['address2']}" if order.get("address2") else "")
+            + f"\n\n{items_text}"
+            + (f"\n\n🎟 Промокод: {order['coupon_code']} (−{money(order['discount'])} UZS)" if order.get("discount") else "")
+            + f"\n\n🚚 Доставка: {money(order['delivery_price'])} UZS ({order['delivery_minutes']} мин)\n"
+            + f"💰 <b>Итого: {money(order['total'])} UZS</b>"
+        )
+        http_requests.post(
+            f"https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendMessage",
+            json={"chat_id": config.TELEGRAM_CHAT_ID, "text": message,
+                  "parse_mode": "HTML"},
+            timeout=15,
+        )
+        return True
+    except Exception:
+        return False
+
+
 @app.route("/checkout", methods=["GET", "POST"])
 def checkout():
     lang = get_lang()
@@ -511,7 +646,17 @@ def checkout():
     form.city.choices = [(str(c["id"]), c["name_ru"] if lang == "ru" else c["name_uz"])
                          for c in cities]
 
+    # Промокод применяем при любом POST/GET показуем текущий
+    coupon = None
+    coupon_code = ""
+    discount = 0
     if form.validate_on_submit():
+        coupon_code = form.coupon.data.strip().upper() if form.coupon.data else ""
+        if coupon_code:
+            coupon = repo.get_coupon(coupon_code)
+            if coupon:
+                discount = round(total * coupon["discount_percent"] / 100, 2)
+
         city = repo.get_city(int(form.city.data))
         if not city:
             abort(400)
@@ -519,14 +664,15 @@ def checkout():
         city_name = city["name_ru"] if lang == "ru" else city["name_uz"]
         delivery_price = float(city["delivery_price"])
         delivery_minutes = city["delivery_minutes"]
-        grand_total = round(total + delivery_price, 2)
+        subtotal = round(total, 2)
+        grand_total = round(subtotal - discount + delivery_price, 2)
 
         order_items = [
             {"name": it["name_ru"] if lang == "ru" else it["name_uz"],
              "price": it["price"], "qty": it["qty"]}
             for it in items
         ]
-        order_id = repo.create_order(
+        order_id = repo.create_order_full(
             customer_name=form.name.data.strip(),
             phone=form.phone.data.strip(),
             city=city_name,
@@ -534,14 +680,23 @@ def checkout():
             address2=form.address2.data.strip() or None,
             delivery_price=delivery_price,
             delivery_minutes=delivery_minutes,
+            subtotal=subtotal,
+            discount=discount,
+            coupon_code=coupon_code if coupon else None,
             total=grand_total,
             items=order_items,
         )
+        # Telegram-уведомление
+        order = repo.get_order(order_id)
+        if order:
+            send_telegram_notification(order)
         session["cart"] = {}
         return redirect(url_for("order_success", order_id=order_id,
                                 total=grand_total,
                                 delivery_price=delivery_price,
-                                delivery_minutes=delivery_minutes))
+                                delivery_minutes=delivery_minutes,
+                                discount=discount,
+                                coupon_code=coupon_code if coupon else ""))
 
     errors = []
     for field in form.errors.values():
@@ -552,16 +707,35 @@ def checkout():
                            cities=cities, form=form, errors=errors)
 
 
+@app.route("/checkout/coupon", methods=["POST"])
+def coupon_check():
+    """AJAX: проверка промокода, возвращает размер скидки."""
+    code = request.form.get("code", "").strip().upper()
+    items, total = cart_items_data()
+    if not items:
+        return jsonify({"ok": False, "error": "cart_empty"})
+    coupon = repo.get_coupon(code) if code else None
+    if coupon:
+        discount = round(total * coupon["discount_percent"] / 100, 2)
+        return jsonify({"ok": True, "code": coupon["code"],
+                        "percent": coupon["discount_percent"],
+                        "discount": discount})
+    return jsonify({"ok": False, "error": "invalid"})
+
+
 @app.route("/order-success")
 def order_success():
     order_id = request.args.get("order_id")
     total = request.args.get("total")
     delivery_price = request.args.get("delivery_price")
     delivery_minutes = request.args.get("delivery_minutes")
+    discount = request.args.get("discount", "0")
+    coupon_code = request.args.get("coupon_code", "")
     return render_template(
         "success.html",
         order_id=order_id, total=total,
         delivery_price=delivery_price, delivery_minutes=delivery_minutes,
+        discount=discount, coupon_code=coupon_code,
     )
 
 
@@ -601,7 +775,7 @@ def logout():
 @app.route("/admin")
 @admin_required
 def admin_panel():
-    return redirect(url_for("admin_orders"))
+    return redirect(url_for("admin_dashboard"))
 
 
 @app.route("/admin/orders")
@@ -654,6 +828,50 @@ def save_product_image(form):
     abort(500, "Не удалось загрузить изображение")
 
 
+def save_gallery_images(form):
+    """Загружает все файлы галереи, возвращает список URL."""
+    files = form.gallery_files.data if hasattr(form, "gallery_files") else None
+    urls = []
+    if not files:
+        return urls
+    for f in files:
+        if not f or not f.filename:
+            continue
+        ext = os.path.splitext(f.filename)[1].lower()
+        if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+            continue
+        try:
+            resp = http_requests.post(
+                "https://uguu.se/upload.php",
+                files={"files[]": (f.filename, f.stream, f"image/{ext[1:]}")},
+                timeout=60,
+            )
+            data = resp.json()
+            url = data["files"][0]["url"]
+            if url:
+                urls.append(url)
+        except Exception:
+            continue
+    return urls
+
+
+def parse_specs_text(text):
+    """Парсит specs из текста: строки 'Ключ: значение'."""
+    result = []
+    if not text:
+        return result
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        if ":" in line:
+            k, v = line.split(":", 1)
+            result.append([k.strip(), v.strip()])
+        else:
+            result.append([line, ""])
+    return result
+
+
 @app.route("/admin/products")
 @admin_required
 def admin_products():
@@ -670,7 +888,8 @@ def admin_product_new():
     ]
     if form.validate_on_submit():
         image_name = save_product_image(form) or form.image.data.strip() or "no-image.png"
-        repo.create_product({
+        specs_json = json.dumps(parse_specs_text(form.specs.data), ensure_ascii=False)
+        result = repo.create_product({
             "category_id": int(form.category_id.data),
             "name_ru": form.name_ru.data.strip(),
             "name_uz": form.name_uz.data.strip(),
@@ -682,7 +901,12 @@ def admin_product_new():
             "image": image_name,
             "rating": form.rating.data or 5.0,
             "reviews": form.reviews.data or 0,
+            "specs_json": specs_json,
         })
+        if result and result.get("id"):
+            gallery = save_gallery_images(form)
+            for pos, url in enumerate(gallery):
+                repo.add_product_image(result["id"], url, pos)
         flash(t("product_saved"), "ok")
         return redirect(url_for("admin_products"))
     return render_template("admin/product_form.html", form=form,
@@ -701,6 +925,7 @@ def admin_product_edit(pid):
     ]
     if form.validate_on_submit():
         image_name = save_product_image(form) or p["image"]
+        specs_json = json.dumps(parse_specs_text(form.specs.data), ensure_ascii=False)
         repo.update_product(pid, {
             "category_id": int(form.category_id.data),
             "name_ru": form.name_ru.data.strip(),
@@ -713,7 +938,13 @@ def admin_product_edit(pid):
             "image": image_name,
             "rating": form.rating.data or 5.0,
             "reviews": form.reviews.data or 0,
+            "specs_json": specs_json,
         })
+        gallery = save_gallery_images(form)
+        if gallery:
+            repo.clear_product_images(pid)
+            for pos, url in enumerate(gallery):
+                repo.add_product_image(pid, url, pos)
         flash(t("product_saved"), "ok")
         return redirect(url_for("admin_products"))
     if not form.is_submitted():
@@ -728,8 +959,12 @@ def admin_product_edit(pid):
         form.image.data = p["image"]
         form.rating.data = p["rating"]
         form.reviews.data = p["reviews"]
+        specs = repo.parse_specs(p.get("specs"))
+        form.specs.data = "\n".join(f"{k}: {v}" for k, v in specs)
+    images = repo.get_product_images(pid)
     return render_template("admin/product_form.html", form=form,
-                           categories=repo.get_categories(), product=p)
+                           categories=repo.get_categories(), product=p,
+                           images=images)
 
 
 @app.route("/admin/products/<int:pid>/delete", methods=["POST"])
@@ -738,6 +973,93 @@ def admin_product_delete(pid):
     repo.delete_product(pid)
     flash(t("product_deleted"), "ok")
     return redirect(url_for("admin_products"))
+
+
+# --- Дашборд / аналитика ---
+
+@app.route("/admin/dashboard")
+@admin_required
+def admin_dashboard():
+    summary = repo.analytics_summary()
+    by_status = repo.analytics_orders_by_status()
+    sales = repo.analytics_sales_by_day(14)
+    top = repo.analytics_top_products(5)
+    recent = repo.analytics_recent_orders(8)
+    status_map = {row["status"]: row["count"] for row in by_status}
+    return render_template(
+        "admin/dashboard.html",
+        summary=summary,
+        status_map=status_map,
+        sales=sales,
+        top=top,
+        recent=recent,
+    )
+
+
+# --- Отзывы ---
+
+@app.route("/admin/reviews")
+@admin_required
+def admin_reviews():
+    status = request.args.get("status", "")
+    reviews = repo.get_all_reviews(status or None)
+    return render_template("admin/reviews.html", reviews=reviews,
+                           status_filter=status)
+
+
+@app.route("/admin/reviews/<int:rid>/approve", methods=["POST"])
+@admin_required
+def admin_review_approve(rid):
+    review = db.fetch_one("SELECT * FROM reviews WHERE id=%s", (rid,))
+    if review:
+        repo.approve_review(rid, True)
+        repo.recalc_product_rating(review["product_id"])
+        flash(t("review_approved"), "ok")
+    return redirect(url_for("admin_reviews"))
+
+
+@app.route("/admin/reviews/<int:rid>/delete", methods=["POST"])
+@admin_required
+def admin_review_delete(rid):
+    review = db.fetch_one("SELECT * FROM reviews WHERE id=%s", (rid,))
+    if review:
+        repo.delete_review(rid)
+        repo.recalc_product_rating(review["product_id"])
+        flash(t("review_deleted"), "ok")
+    return redirect(url_for("admin_reviews"))
+
+
+# --- Промокоды ---
+
+@app.route("/admin/coupons", methods=["GET", "POST"])
+@admin_required
+def admin_coupons():
+    form = CouponForm()
+    if form.validate_on_submit():
+        repo.create_coupon(form.code.data, form.discount_percent.data)
+        flash(t("coupon_saved"), "ok")
+        return redirect(url_for("admin_coupons"))
+    coupons = repo.get_coupons()
+    return render_template("admin/coupons.html", form=form, coupons=coupons)
+
+
+@app.route("/admin/coupons/<int:cid>/toggle", methods=["POST"])
+@admin_required
+def admin_coupon_toggle(cid):
+    coupon = db.fetch_one("SELECT * FROM coupons WHERE id=%s", (cid,))
+    if coupon:
+        repo.update_coupon(cid, coupon["code"], coupon["discount_percent"],
+                           not coupon["active"])
+        flash(t("coupon_saved"), "ok")
+    return redirect(url_for("admin_coupons"))
+
+
+@app.route("/admin/coupons/<int:cid>/delete", methods=["POST"])
+@admin_required
+def admin_coupon_delete(cid):
+    repo.delete_coupon(cid)
+    flash(t("coupon_deleted"), "ok")
+    return redirect(url_for("admin_coupons"))
 
 
 # --- Категории ---
