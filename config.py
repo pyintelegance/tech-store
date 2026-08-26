@@ -14,6 +14,10 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "tech-store-secret-key-change-me")
 ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 
+# Telegram-уведомления о заказах (пустые = отключено)
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+
 
 def dsn():
     return {
