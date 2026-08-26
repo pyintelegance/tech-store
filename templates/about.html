@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{{ t('about_title') }} — {{ t('brand') }}{% endblock %}
+{% block content %}
+<section class="hero" style="padding:56px 0">
+    <div class="container hero-inner">
+        <div class="hero-text">
+            <div class="hero-badge">🚀 {{ t('brand') }}</div>
+            <h1 class="hero-title">{{ t('about_title') }}</h1>
+            <p class="hero-sub">{{ t('about_sub') }}</p>
+            <div class="hero-btns">
+                <a href="{{ url_for('index') }}" class="hero-cta">🛍️ {{ t('hero_cta') }}</a>
+                <a href="{{ url_for('track') }}" class="hero-ghost">📦 {{ t('track') }}</a>
+            </div>
+        </div>
+        <div class="hero-card">
+            <div class="hero-card-title">⚙️ {{ t('about_stack_title') }}</div>
+            <div class="hero-card-item"><span class="hci-icon">🐍</span><span>{{ t('stack_flask') }}</span></div>
+            <div class="hero-card-item"><span class="hci-icon">🗄️</span><span>{{ t('stack_postgres') }}</span></div>
+            <div class="hero-card-item"><span class="hci-icon">☁️</span><span>{{ t('stack_cloud') }}</span></div>
+            <div class="hero-card-item"><span class="hci-icon">🎨</span><span>{{ t('stack_front') }}</span></div>
+        </div>
+    </div>
+    <div class="hero-flow"></div>
+</section>
+
+<div class="container section">
+    <div class="panel reveal">
+        <h3 class="panel-title">💡 {{ t('about_what_title') }}</h3>
+        <p class="about-text">{{ t('about_what_text') }}</p>
+    </div>
+
+    <div class="panel reveal">
+        <h3 class="panel-title">⚙️ {{ t('about_stack_title') }}</h3>
+        <div class="tech-grid">
+            <div class="tech-chip">🐍 {{ t('stack_flask') }}</div>
+            <div class="tech-chip">🗄️ {{ t('stack_postgres') }}</div>
+            <div class="tech-chip">🔌 {{ t('stack_psycopg') }}</div>
+            <div class="tech-chip">📋 {{ t('stack_wtf') }}</div>
+            <div class="tech-chip">☁️ {{ t('stack_cloud') }}</div>
+            <div class="tech-chip">🎨 {{ t('stack_front') }}</div>
+            <div class="tech-chip">🌿 {{ t('stack_git') }}</div>
+        </div>
+        <p class="about-text muted" style="margin-top:14px">{{ t('about_stack_text') }}</p>
+    </div>
+
+    <div class="panel reveal">
+        <h3 class="panel-title">✨ {{ t('about_features_title') }}</h3>
+        <div class="about-features">
+            <div class="about-feat"><span>🔍</span>{{ t('feat_catalog') }}</div>
+            <div class="about-feat"><span>🛒</span>{{ t('feat_cart') }}</div>
+            <div class="about-feat"><span>📦</span>{{ t('feat_order') }}</div>
+            <div class="about-feat"><span>🚚</span>{{ t('feat_track') }}</div>
+            <div class="about-feat"><span>❤️</span>{{ t('feat_wishlist') }}</div>
+            <div class="about-feat"><span>⭐</span>{{ t('feat_reviews') }}</div>
+            <div class="about-feat"><span>📸</span>{{ t('feat_gallery') }}</div>
+            <div class="about-feat"><span>👑</span>{{ t('feat_admin') }}</div>
+            <div class="about-feat"><span>📊</span>{{ t('feat_analytics') }}</div>
+            <div class="about-feat"><span>📱</span>{{ t('feat_telegram') }}</div>
+            <div class="about-feat"><span>🌐</span>{{ t('feat_i18n') }}</div>
+            <div class="about-feat"><span>🌙</span>{{ t('feat_theme') }}</div>
+        </div>
+    </div>
+
+    <div class="panel reveal">
+        <h3 class="panel-title">👨‍💻 {{ t('about_author_title') }}</h3>
+        <p class="about-text">{{ t('about_author_text') }}</p>
+        <div class="about-note">{{ t('about_note') }}</div>
+    </div>
+</div>
+{% endblock %}
