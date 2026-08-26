@@ -292,6 +292,14 @@ def money_filter(value):
     return money(value)
 
 
+@app.template_filter("product_img")
+def product_img_filter(image):
+    """Возвращает URL картинки: внешний (http) или локальный /static/img/."""
+    if image and str(image).startswith("http"):
+        return str(image)
+    return url_for("static", filename="img/" + str(image))
+
+
 def parse_decimal(value):
     try:
         return Decimal(str(value).strip())
@@ -560,19 +568,29 @@ def admin_order_status(oid):
 
 # --- Товары ---
 
+import requests as http_requests
+
 def save_product_image(form):
-    """Сохраняет загруженный файл в static/img, возвращает имя файла или None."""
+    """Загружает фото в облако (uguu.se), возвращает URL или None."""
     file = form.image_file.data
     if not file or not file.filename:
         return None
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
         abort(400, "Недопустимый формат изображения")
-    filename = f"p{secrets.token_hex(8)}{ext}"
-    upload_dir = os.path.join(app.root_path, "static", "img")
-    os.makedirs(upload_dir, exist_ok=True)
-    file.save(os.path.join(upload_dir, filename))
-    return filename
+    try:
+        resp = http_requests.post(
+            "https://uguu.se/upload.php",
+            files={"files[]": (file.filename, file.stream, f"image/{ext[1:]}")},
+            timeout=60,
+        )
+        data = resp.json()
+        url = data["files"][0]["url"]
+        if url:
+            return url
+    except Exception:
+        pass
+    abort(500, "Не удалось загрузить изображение")
 
 
 @app.route("/admin/products")
