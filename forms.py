@@ -3,7 +3,7 @@
 from flask_wtf import FlaskForm, CSRFProtect
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, IntegerField, FloatField, DecimalField, SubmitField, PasswordField, SelectField, TextAreaField
-from wtforms.validators import DataRequired, Length, Optional, NumberRange, Regexp
+from wtforms.validators import DataRequired, Length, Optional, NumberRange, Regexp, Email
 
 csrf = CSRFProtect()
 
@@ -18,6 +18,7 @@ class CheckoutForm(FlaskForm):
         DataRequired(message="phone_required"),
         Regexp(r"^\+?\d[\d\s\-()]{6,25}$", message="phone_invalid"),
     ])
+    email = StringField("email", validators=[Optional(), Email(message="email_invalid"), Length(max=200)])
     city = SelectField("city", validators=[DataRequired(message="city_required")])
     address = StringField("address", validators=[
         DataRequired(message="address_required"),
