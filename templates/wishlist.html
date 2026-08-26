@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ t('wishlist_title') }} — {{ t('brand') }}{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="page-title">❤️ {{ t('wishlist_title') }}</h1>
+
+    {% if products %}
+    <div class="grid">
+        {% for p in products %}
+        <div class="card reveal wish-page">
+            <a href="{{ url_for('product', pid=p.id) }}" class="card-img-wrap">
+                <img src="{{ p.image|product_img }}" alt="{{ p['name_ru'] if lang=='ru' else p['name_uz'] }}" class="card-img">
+            </a>
+            <form method="post" action="{{ url_for('wishlist_toggle') }}" class="wish-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="product_id" value="{{ p.id }}">
+                <button type="submit" class="wish-btn active" title="{{ t('remove_wish') }}">♥</button>
+            </form>
+            <div class="card-body">
+                <div class="card-cat">{{ p.cat_icon }} {{ p.cat_ru if lang=='ru' else p.cat_uz }}</div>
+                <a href="{{ url_for('product', pid=p.id) }}" class="card-title">{{ p['name_ru'] if lang=='ru' else p['name_uz'] }}</a>
+                <div class="card-rating">★ {{ p.rating }} <span class="muted">({{ p.reviews }})</span></div>
+                <div class="card-price-row">
+                    <div class="price">{{ p.price|money }} <span class="cur">UZS</span></div>
+                    {% if p.stock > 0 %}
+                    <form method="post" action="{{ url_for('cart_add') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="product_id" value="{{ p.id }}">
+                        <button type="submit" class="btn add-btn" title="{{ t('buy') }}">+</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+        <div class="empty-icon">💔</div>
+        <h3>{{ t('wishlist_empty') }}</h3>
+        <p>{{ t('wishlist_empty_hint') }}</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">{{ t('go_catalog') }}</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
