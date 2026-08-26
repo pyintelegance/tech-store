@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Формы (WTForms) с валидацией для магазина и админ-панели."""
 from flask_wtf import FlaskForm, CSRFProtect
+from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, IntegerField, FloatField, DecimalField, SubmitField, PasswordField, SelectField, TextAreaField
 from wtforms.validators import DataRequired, Length, Optional, NumberRange, Regexp
 
@@ -41,7 +42,8 @@ class ProductForm(FlaskForm):
     price = DecimalField("price", validators=[DataRequired(), NumberRange(min=0)])
     old_price = DecimalField("old_price", validators=[Optional(), NumberRange(min=0)])
     stock = IntegerField("stock", validators=[DataRequired(), NumberRange(min=0)])
-    image = StringField("image", validators=[DataRequired(), Length(max=255)])
+    image = StringField("image", validators=[Optional(), Length(max=255)])
+    image_file = FileField("image_file", validators=[FileAllowed(["jpg", "jpeg", "png", "webp", "gif"], "Только изображения")])
     rating = DecimalField("rating", validators=[Optional(), NumberRange(min=0, max=5)])
     reviews = IntegerField("reviews", validators=[Optional(), NumberRange(min=0)])
     submit = SubmitField("save")
