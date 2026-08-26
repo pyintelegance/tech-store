@@ -77,6 +77,11 @@
                      alt="{{ p['name_ru'] if lang=='ru' else p['name_uz'] }}" class="card-img">
                 {% if p.old_price %}<span class="badge sale">-{{ ((1 - p.price / p.old_price) * 100)|round|int }}%</span>{% endif %}
             </a>
+            <form method="post" action="{{ url_for('wishlist_toggle') }}" class="wish-form" data-wishpid="{{ p.id }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="product_id" value="{{ p.id }}">
+                <button type="submit" class="wish-btn" title="{{ t('wishlist') }}">♡</button>
+            </form>
             <div class="card-body">
                 <div class="card-cat">{{ p.cat_icon }} {{ p.cat_ru if lang=='ru' else p.cat_uz }}</div>
                 <a href="{{ url_for('product', pid=p.id) }}" class="card-title">
@@ -102,6 +107,21 @@
         </div>
         {% endfor %}
     </div>
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% set base_args = dict(category=active_category, q=q, sort=sort, min_price=min_price, max_price=max_price) %}
+        {% if page > 1 %}
+        <a href="{{ url_for('index', page=page-1, **base_args) }}" class="page-btn">←</a>
+        {% endif %}
+        {% for p in range(1, total_pages + 1) %}
+        <a href="{{ url_for('index', page=p, **base_args) }}" class="page-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+        {% endfor %}
+        {% if page < total_pages %}
+        <a href="{{ url_for('index', page=page+1, **base_args) }}" class="page-btn">→</a>
+        {% endif %}
+    </div>
+    {% endif %}
     {% else %}
     <div class="empty">
         <div class="empty-icon">🔍</div>
