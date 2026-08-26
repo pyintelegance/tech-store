@@ -1,0 +1,16 @@
+name: Keep-alive ping
+
+# Пинг сайта каждые 10 минут, чтобы Render free не «засыпал»
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping TechStore
+        run: |
+          curl -s -o /dev/null -w "HTTP %{http_code}\n" https://tech-store-z3ev.onrender.com/
+          curl -s -o /dev/null -w "HTTP %{http_code}\n" https://tech-store-z3ev.onrender.com/product/1
