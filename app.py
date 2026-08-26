@@ -9,11 +9,15 @@
   app.py         — роуты, CSRF, админ-панель
 """
 import functools
+import os
+import secrets
+import uuid
 from decimal import Decimal, InvalidOperation
 
 from flask import (Flask, render_template, request, redirect, url_for,
                    session, abort, flash)
 from werkzeug.security import check_password_hash
+from werkzeug.utils import secure_filename
 
 import config
 import repository as repo
@@ -556,6 +560,21 @@ def admin_order_status(oid):
 
 # --- Товары ---
 
+def save_product_image(form):
+    """Сохраняет загруженный файл в static/img, возвращает имя файла или None."""
+    file = form.image_file.data
+    if not file or not file.filename:
+        return None
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+        abort(400, "Недопустимый формат изображения")
+    filename = f"p{secrets.token_hex(8)}{ext}"
+    upload_dir = os.path.join(app.root_path, "static", "img")
+    os.makedirs(upload_dir, exist_ok=True)
+    file.save(os.path.join(upload_dir, filename))
+    return filename
+
+
 @app.route("/admin/products")
 @admin_required
 def admin_products():
@@ -571,6 +590,7 @@ def admin_product_new():
         (str(c["id"]), c["name_ru"]) for c in repo.get_categories()
     ]
     if form.validate_on_submit():
+        image_name = save_product_image(form)
         repo.create_product({
             "category_id": int(form.category_id.data),
             "name_ru": form.name_ru.data.strip(),
@@ -580,7 +600,7 @@ def admin_product_new():
             "price": form.price.data,
             "old_price": form.old_price.data,
             "stock": form.stock.data,
-            "image": form.image.data.strip(),
+            "image": image_name,
             "rating": form.rating.data or 5.0,
             "reviews": form.reviews.data or 0,
         })
@@ -601,6 +621,7 @@ def admin_product_edit(pid):
         (str(c["id"]), c["name_ru"]) for c in repo.get_categories()
     ]
     if form.validate_on_submit():
+        image_name = save_product_image(form) or p["image"]
         repo.update_product(pid, {
             "category_id": int(form.category_id.data),
             "name_ru": form.name_ru.data.strip(),
@@ -610,7 +631,7 @@ def admin_product_edit(pid):
             "price": form.price.data,
             "old_price": form.old_price.data,
             "stock": form.stock.data,
-            "image": form.image.data.strip(),
+            "image": image_name,
             "rating": form.rating.data or 5.0,
             "reviews": form.reviews.data or 0,
         })
