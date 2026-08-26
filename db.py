@@ -167,10 +167,11 @@ def seed():
     admin_user = os.environ.get("ADMIN_USER", "admin")
     admin_pass = os.environ.get("ADMIN_PASSWORD", "admin123")
     cur.execute(
-        "INSERT INTO admins (username, password_hash) VALUES (%s,%s)",
-        (admin_user, generate_password_hash(admin_pass)),
+        "INSERT INTO admins (username, password_hash, role, permissions) "
+        "VALUES (%s,%s,%s,%s)",
+        (admin_user, generate_password_hash(admin_pass), "superadmin", "[]"),
     )
-    print(f"Администратор: {admin_user} / {admin_pass}")
+    print(f"Администратор: {admin_user} / {admin_pass} (superadmin)")
 
     conn.commit()
     cur.close()
