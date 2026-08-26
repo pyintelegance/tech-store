@@ -24,6 +24,7 @@ class CheckoutForm(FlaskForm):
         Length(min=5, max=500, message="address_length"),
     ])
     address2 = StringField("address2", validators=[Optional(), Length(max=500)])
+    coupon = StringField("coupon", validators=[Optional(), Length(max=50)])
     submit = SubmitField("place_order")
 
 
@@ -44,6 +45,8 @@ class ProductForm(FlaskForm):
     stock = IntegerField("stock", validators=[DataRequired(), NumberRange(min=0)])
     image = StringField("image", validators=[Optional(), Length(max=255)])
     image_file = FileField("image_file", validators=[FileAllowed(["jpg", "jpeg", "png", "webp", "gif"], "Только изображения")])
+    gallery_files = FileField("gallery_files", validators=[FileAllowed(["jpg", "jpeg", "png", "webp", "gif"], "Только изображения")])
+    specs = TextAreaField("specs", validators=[Optional()])
     rating = DecimalField("rating", validators=[Optional(), NumberRange(min=0, max=5)])
     reviews = IntegerField("reviews", validators=[Optional(), NumberRange(min=0)])
     submit = SubmitField("save")
@@ -62,4 +65,10 @@ class CityForm(FlaskForm):
     name_uz = StringField("name_uz", validators=[DataRequired(), Length(max=100)])
     delivery_price = DecimalField("delivery_price", validators=[DataRequired(), NumberRange(min=0)])
     delivery_minutes = IntegerField("delivery_minutes", validators=[DataRequired(), NumberRange(min=1)])
+    submit = SubmitField("save")
+
+
+class CouponForm(FlaskForm):
+    code = StringField("code", validators=[DataRequired(), Length(max=50)])
+    discount_percent = IntegerField("discount_percent", validators=[DataRequired(), NumberRange(min=1, max=100)])
     submit = SubmitField("save")
