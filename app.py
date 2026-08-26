@@ -15,7 +15,7 @@ import uuid
 from decimal import Decimal, InvalidOperation
 
 from flask import (Flask, render_template, request, redirect, url_for,
-                   session, abort, flash)
+                   session, abort, flash, jsonify)
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 
@@ -469,6 +469,9 @@ def cart_add():
     cart = session.get("cart", {})
     cart[pid] = cart.get(pid, 0) + qty
     session["cart"] = cart
+    cart_count = sum(cart.values())
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"ok": True, "cart_count": cart_count, "qty": cart[pid]})
     return redirect(request.referrer or url_for("cart"))
 
 
