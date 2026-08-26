@@ -105,12 +105,13 @@ def create_product(data):
     return db.execute_returning(
         """INSERT INTO products
            (category_id, name_ru, name_uz, description_ru, description_uz,
-            price, old_price, stock, image, rating, reviews)
-           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+            price, old_price, stock, image, rating, reviews, specs)
+           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
         (data["category_id"], data["name_ru"], data["name_uz"],
          data["description_ru"], data["description_uz"],
          data["price"], data.get("old_price"), data["stock"],
-         data["image"], data.get("rating", 5.0), data.get("reviews", 0)),
+         data["image"], data.get("rating", 5.0), data.get("reviews", 0),
+         data.get("specs_json", "[]")),
     )
 
 
@@ -118,12 +119,12 @@ def update_product(product_id, data):
     return db.execute(
         """UPDATE products SET category_id=%s, name_ru=%s, name_uz=%s,
            description_ru=%s, description_uz=%s, price=%s, old_price=%s,
-           stock=%s, image=%s, rating=%s, reviews=%s WHERE id=%s""",
+           stock=%s, image=%s, rating=%s, reviews=%s, specs=%s WHERE id=%s""",
         (data["category_id"], data["name_ru"], data["name_uz"],
          data["description_ru"], data["description_uz"],
          data["price"], data.get("old_price"), data["stock"],
          data["image"], data.get("rating", 5.0), data.get("reviews", 0),
-         product_id),
+         data.get("specs_json", "[]"), product_id),
     )
 
 
@@ -217,3 +218,225 @@ def create_order(customer_name, phone, city, address, address2,
         raise
     finally:
         conn.close()
+
+
+def create_order_full(customer_name, phone, city, address, address2,
+                      delivery_price, delivery_minutes, subtotal, discount,
+                      coupon_code, total, items):
+    """Создаёт заказ с полными полями (скидки/промокод) в транзакции."""
+    sql_order = (
+        "INSERT INTO orders "
+        "(customer_name, phone, city, address, address2, "
+        "delivery_price, delivery_minutes, subtotal, discount, coupon_code, total, status) "
+        "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'new') RETURNING id"
+    )
+    conn = db.get_conn()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            cur.execute(sql_order, (
+                customer_name, phone, city, address, address2,
+                delivery_price, delivery_minutes, subtotal, discount,
+                coupon_code, total,
+            ))
+            order_id = cur.fetchone()["id"]
+            for it in items:
+                cur.execute(
+                    "INSERT INTO order_items (order_id, product_name, price, quantity) "
+                    "VALUES (%s,%s,%s,%s)",
+                    (order_id, it["name"], it["price"], it["qty"]),
+                )
+        conn.commit()
+        return order_id
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+# ---------- Характеристики (specs) ----------
+
+def parse_specs(specs):
+    """Принимает jsonb из БД или список пар, возвращает список [key, value]."""
+    if specs is None:
+        return []
+    if isinstance(specs, list):
+        return specs
+    import json
+    try:
+        return json.loads(specs)
+    except Exception:
+        return []
+
+
+# ---------- Галерея ----------
+
+def get_product_images(product_id):
+    return db.fetch_all(
+        "SELECT * FROM product_images WHERE product_id=%s ORDER BY position, id",
+        (product_id,),
+    )
+
+
+def add_product_image(product_id, url, position=0):
+    return db.execute(
+        "INSERT INTO product_images (product_id, url, position) VALUES (%s,%s,%s)",
+        (product_id, url, position),
+    )
+
+
+def clear_product_images(product_id):
+    return db.execute("DELETE FROM product_images WHERE product_id=%s", (product_id,))
+
+
+# ---------- Отзывы ----------
+
+def get_reviews(product_id, approved_only=True):
+    if approved_only:
+        return db.fetch_all(
+            "SELECT * FROM reviews WHERE product_id=%s AND approved=TRUE "
+            "ORDER BY created_at DESC",
+            (product_id,),
+        )
+    return db.fetch_all(
+        "SELECT * FROM reviews WHERE product_id=%s ORDER BY approved, created_at DESC",
+        (product_id,),
+    )
+
+
+def get_all_reviews(status=None):
+    if status == "pending":
+        return db.fetch_all(
+            "SELECT r.*, p.name_ru AS product_ru, p.name_uz AS product_uz "
+            "FROM reviews r JOIN products p ON p.id=r.product_id "
+            "WHERE r.approved=FALSE ORDER BY r.created_at DESC"
+        )
+    return db.fetch_all(
+        "SELECT r.*, p.name_ru AS product_ru, p.name_uz AS product_uz "
+        "FROM reviews r JOIN products p ON p.id=r.product_id "
+        "ORDER BY r.created_at DESC"
+    )
+
+
+def create_review(product_id, customer_name, rating, text):
+    return db.execute_returning(
+        "INSERT INTO reviews (product_id, customer_name, rating, text) "
+        "VALUES (%s,%s,%s,%s) RETURNING id",
+        (product_id, customer_name, rating, text),
+    )
+
+
+def approve_review(review_id, approved=True):
+    return db.execute(
+        "UPDATE reviews SET approved=%s WHERE id=%s", (approved, review_id)
+    )
+
+
+def delete_review(review_id):
+    return db.execute("DELETE FROM reviews WHERE id=%s", (review_id,))
+
+
+def recalc_product_rating(product_id):
+    """Пересчитывает рейтинг и число отзывов товара по одобренным."""
+    row = db.fetch_one(
+        "SELECT COALESCE(AVG(rating),5.0) AS avg_rating, COUNT(*) AS cnt "
+        "FROM reviews WHERE product_id=%s AND approved=TRUE",
+        (product_id,),
+    )
+    avg = float(row["avg_rating"]) if row else 5.0
+    cnt = row["cnt"] if row else 0
+    db.execute(
+        "UPDATE products SET rating=%s, reviews=%s WHERE id=%s",
+        (round(avg, 1), cnt, product_id),
+    )
+    return avg, cnt
+
+
+# ---------- Промокоды ----------
+
+def get_coupons():
+    return db.fetch_all("SELECT * FROM coupons ORDER BY id")
+
+
+def get_coupon(code):
+    return db.fetch_one(
+        "SELECT * FROM coupons WHERE UPPER(code)=UPPER(%s) AND active=TRUE",
+        (code,),
+    )
+
+
+def create_coupon(code, discount_percent):
+    return db.execute_returning(
+        "INSERT INTO coupons (code, discount_percent) VALUES (%s,%s) RETURNING id",
+        (code.upper(), discount_percent),
+    )
+
+
+def update_coupon(coupon_id, code, discount_percent, active):
+    return db.execute(
+        "UPDATE coupons SET code=%s, discount_percent=%s, active=%s WHERE id=%s",
+        (code.upper(), discount_percent, active, coupon_id),
+    )
+
+
+def delete_coupon(coupon_id):
+    return db.execute("DELETE FROM coupons WHERE id=%s", (coupon_id,))
+
+
+# ---------- Аналитика ----------
+
+def analytics_summary():
+    """Сводные показатели для дашборда."""
+    orders_total = db.fetch_one(
+        "SELECT COUNT(*) AS count, COALESCE(SUM(total),0) AS sum FROM orders"
+    )
+    new_orders = db.fetch_one(
+        "SELECT COUNT(*) AS count FROM orders WHERE status='new'"
+    )
+    products_total = db.fetch_one("SELECT COUNT(*) AS count FROM products")
+    reviews_total = db.fetch_one(
+        "SELECT COUNT(*) AS count FROM reviews WHERE approved=TRUE"
+    )
+    return {
+        "orders_count": orders_total["count"],
+        "revenue": float(orders_total["sum"]),
+        "new_orders": new_orders["count"],
+        "products_count": products_total["count"],
+        "reviews_count": reviews_total["count"],
+    }
+
+
+def analytics_orders_by_status():
+    return db.fetch_all(
+        "SELECT status, COUNT(*) AS count FROM orders GROUP BY status"
+    )
+
+
+def analytics_sales_by_day(days=14):
+    return db.fetch_all(
+        """SELECT to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day,
+                  COUNT(*) AS count, SUM(total) AS total
+           FROM orders
+           WHERE created_at > now() - make_interval(days => %s)
+           GROUP BY date_trunc('day', created_at)
+           ORDER BY day ASC""",
+        (int(days),),
+    )
+
+
+def analytics_top_products(limit=5):
+    return db.fetch_all(
+        """SELECT oi.product_name, SUM(oi.quantity) AS qty,
+                  SUM(oi.price * oi.quantity) AS total
+           FROM order_items oi
+           GROUP BY oi.product_name
+           ORDER BY qty DESC
+           LIMIT %s""",
+        (limit,),
+    )
+
+
+def analytics_recent_orders(limit=8):
+    return db.fetch_all(
+        "SELECT * FROM orders ORDER BY id DESC LIMIT %s", (limit,)
+    )
