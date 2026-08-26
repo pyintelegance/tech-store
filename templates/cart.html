@@ -2,13 +2,13 @@
 {% block title %}{{ t('cart') }} — {{ t('brand') }}{% endblock %}
 {% block content %}
 <div class="container">
-    <h1 class="page-title">{{ t('cart_title') }}</h1>
+    <h1 class="page-title">🛒 {{ t('cart_title') }}</h1>
 
     {% if items %}
     <div class="cart-layout">
         <div class="cart-items">
             {% for it in items %}
-            <div class="cart-item">
+            <div class="cart-item reveal">
                 <img src="{{ it.image|product_img }}" alt="" class="cart-item-img">
                 <div class="cart-item-info">
                     <div class="cart-item-name">{{ it.name_ru if lang=='ru' else it.name_uz }}</div>
@@ -31,12 +31,14 @@
             {% endfor %}
         </div>
 
-        <div class="cart-summary">
+        <div class="cart-summary reveal">
             <h3>{{ t('items_total') }}</h3>
             <div class="summary-row"><span>{{ t('items_total') }}</span><span>{{ total|money }} UZS</span></div>
-            <div class="summary-row total-row"><span>{{ t('total') }}</span><span>{{ total|money }} UZS</span></div>
-            <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-block btn-lg">{{ t('checkout') }}</a>
+            <div class="summary-row total-row"><span>{{ t('total') }}</span><span>{{ total|money }} UZS</span>
+            </div>
+            <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-block btn-lg">➜ {{ t('checkout') }}</a>
             <a href="{{ url_for('index') }}" class="btn btn-block">{{ t('continue_shopping') }}</a>
+            <div class="pay-note">💵 {{ t('pay_on_delivery') }}</div>
         </div>
     </div>
     {% else %}
@@ -44,7 +46,7 @@
         <div class="empty-icon">🛒</div>
         <h3>{{ t('cart_empty') }}</h3>
         <p>{{ t('cart_empty_hint') }}</p>
-        <a href="{{ url_for('index') }}" class="btn btn-primary">{{ t('go_catalog') }}</a>
+        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">{{ t('go_catalog') }}</a>
     </div>
     {% endif %}
 </div>
