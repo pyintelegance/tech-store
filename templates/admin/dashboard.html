@@ -1,0 +1,108 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ t('dashboard') }}{% endblock %}
+{% block content %}
+<div class="admin-content">
+    <div class="admin-head">
+        <h2 class="admin-title">📊 {{ t('dashboard') }}</h2>
+    </div>
+
+    <div class="stat-cards">
+        <div class="stat-card">
+            <div class="stat-card-icon blue">📦</div>
+            <div class="stat-card-body">
+                <div class="stat-card-value">{{ summary.orders_count }}</div>
+                <div class="stat-card-label">{{ t('stat_orders') }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-icon green">💰</div>
+            <div class="stat-card-body">
+                <div class="stat-card-value">{{ summary.revenue|money }} <span class="muted">UZS</span></div>
+                <div class="stat-card-label">{{ t('stat_revenue') }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-icon orange">🆕</div>
+            <div class="stat-card-body">
+                <div class="stat-card-value">{{ summary.new_orders }}</div>
+                <div class="stat-card-label">{{ t('stat_new') }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-icon purple">🏷️</div>
+            <div class="stat-card-body">
+                <div class="stat-card-value">{{ summary.products_count }}</div>
+                <div class="stat-card-label">{{ t('stat_products_admin') }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-icon pink">⭐</div>
+            <div class="stat-card-body">
+                <div class="stat-card-value">{{ summary.reviews_count }}</div>
+                <div class="stat-card-label">{{ t('stat_reviews') }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dash-grid">
+        <div class="panel dash-panel">
+            <h3 class="panel-title">{{ t('sales_14d') }}</h3>
+            {% if sales %}
+            <div class="bar-chart" id="sales-chart">
+                {% set maxv = sales|map(attribute='total')|max %}
+                {% for s in sales %}
+                <div class="bar-col" title="{{ s.day }}: {{ s.total|money }} UZS">
+                    <div class="bar" style="height: {{ (s.total / maxv * 100)|round|int if maxv else 0 }}%"></div>
+                    <span class="bar-label">{{ s.day[8:10] }}.{{ s.day[5:7] }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="muted">{{ t('empty_catalog_hint') }}</p>
+            {% endif %}
+        </div>
+
+        <div class="panel dash-panel">
+            <h3 class="panel-title">{{ t('top_products') }}</h3>
+            {% if top %}
+            {% set maxq = top|map(attribute='qty')|max %}
+            {% for tp in top %}
+            <div class="top-row">
+                <span class="top-name">{{ tp.product_name }}</span>
+                <span class="top-qty">{{ tp.qty }} шт</span>
+                <span class="top-total">{{ tp.total|money }} UZS</span>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="muted">{{ t('empty_catalog_hint') }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="panel dash-panel">
+        <h3 class="panel-title">{{ t('recent_orders') }}</h3>
+        {% if recent %}
+        <div class="admin-table">
+            <table>
+                <thead>
+                    <tr><th>#</th><th>{{ t('customer') }}</th><th>{{ t('city') }}</th><th>{{ t('total') }}</th><th>{{ t('status') }}</th></tr>
+                </thead>
+                <tbody>
+                    {% for o in recent %}
+                    <tr>
+                        <td>#{{ o.id }}</td>
+                        <td>{{ o.customer_name }} · {{ o.phone }}</td>
+                        <td>{{ o.city }}</td>
+                        <td>{{ o.total|money }} UZS</td>
+                        <td><span class="status-pill status-{{ o.status }}">{{ t('status_' + o.status) }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="muted">{{ t('empty_catalog_hint') }}</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
