@@ -263,6 +263,37 @@ TRANSLATIONS = {
         "avg_check": "Средний чек",
         "sales_monthly": "Продажи по месяцам",
         "export_orders": "Экспорт заказов (CSV)",
+        "about": "О проекте",
+        "about_title": "О проекте TechStore",
+        "about_sub": "Полноценный интернет-магазин техники — портфолио backend-разработчика",
+        "about_what_title": "Что это",
+        "about_what_text": "TechStore — это профессиональный интернет-магазин электроники с настоящим бэкендом. Проект создан как портфолио: он показывает, как устроен реальный e-commerce изнутри — от базы данных до витрины и админ-панели.",
+        "about_stack_title": "Технологии",
+        "about_stack_text": "Проект построен на Python-стеке с чётким разделением на слои: конфигурация, доступ к данным, SQL-запросы, формы и роуты.",
+        "stack_flask": "Flask 3.1 — веб-фреймворк",
+        "stack_postgres": "PostgreSQL — база данных (Neon, облако)",
+        "stack_psycopg": "psycopg2 — драйвер для работы с БД",
+        "stack_wtf": "Flask-WTF / WTForms — формы и валидация",
+        "stack_cloud": "Render — хостинг, uguu.se — хранение фото",
+        "stack_front": "HTML, CSS, JavaScript — адаптивный интерфейс",
+        "stack_git": "Git + GitHub — версионирование",
+        "about_features_title": "Возможности",
+        "about_features_text": "Сайт делает всё, что умеет настоящий магазин:",
+        "feat_catalog": "Каталог с поиском, фильтрами, сортировкой и пагинацией",
+        "feat_cart": "Корзина с AJAX-добавлением без перезагрузки",
+        "feat_order": "Оформление заказа: город, доставка, адрес, промокоды",
+        "feat_track": "Отслеживание статуса заказа по номеру",
+        "feat_wishlist": "Избранное с сохранением в сессии",
+        "feat_reviews": "Отзывы покупателей с рейтингом",
+        "feat_gallery": "Галерея фото и характеристики товаров",
+        "feat_admin": "Админ-панель с ролями и правами доступа",
+        "feat_analytics": "Аналитика: графики продаж, средний чек, экспорт CSV",
+        "feat_telegram": "Уведомления о заказах в Telegram",
+        "feat_i18n": "Двуязычный интерфейс RU / UZ",
+        "feat_theme": "Тёмная тема и мобильная версия",
+        "about_author_title": "Автор",
+        "about_author_text": "Проект создан Жахангиром — бэкенд-разработчиком из Ташкента. Python, PostgreSQL, Flask — мой стек.",
+        "about_note": "Это портфолио-проект. Все товары и заказы — демонстрационные.",
     },
     "uz": {
         "brand": "TechStore",
@@ -493,6 +524,37 @@ TRANSLATIONS = {
         "avg_check": "O'rtacha chek",
         "sales_monthly": "Oylik savdo",
         "export_orders": "Buyurtmalar eksporti (CSV)",
+        "about": "Loyiha haqida",
+        "about_title": "TechStore loyihasi haqida",
+        "about_sub": "To'liq texnika internet-do'koni — backend dasturchi portfolio",
+        "about_what_title": "Bu nima",
+        "about_what_text": "TechStore — haqiqiy backendga ega professional elektronika internet-do'koni. Loyiha portfolio sifatida yaratilgan: u haqiqiy e-commerce ichkaridan qanday tuzilganini ko'rsatadi — bazadan tortib vitrina va admin panelgacha.",
+        "about_stack_title": "Texnologiyalar",
+        "about_stack_text": "Loyiha Python-stekda qat'iy qatlamlarga bo'lingan: konfiguratsiya, ma'lumotlarga kirish, SQL so'rovlar, formalar va routlar.",
+        "stack_flask": "Flask 3.1 — veb-framework",
+        "stack_postgres": "PostgreSQL — ma'lumotlar bazasi (Neon, bulut)",
+        "stack_psycopg": "psycopg2 — ma'lumotlar bazasi bilan ishlash",
+        "stack_wtf": "Flask-WTF / WTForms — formalar va validatsiya",
+        "stack_cloud": "Render — hosting, uguu.se — rasm saqlash",
+        "stack_front": "HTML, CSS, JavaScript — adaptiv interfeys",
+        "stack_git": "Git + GitHub — versiyalash",
+        "about_features_title": "Imkoniyatlar",
+        "about_features_text": "Sayt haqiqiy do'kon qila oladigan hamma narsani qiladi:",
+        "feat_catalog": "Qidiruv, filtrlar, saralash va paginatsiyali katalog",
+        "feat_cart": "AJAX bilan sahifa qayta yuklanmasdan savat",
+        "feat_order": "Buyurtma rasmiylashtirish: shahar, yetkazib berish, manzil, promokodlar",
+        "feat_track": "Buyurtma holatini raqam bo'yicha kuzatish",
+        "feat_wishlist": "Sevimlilarni sessiyada saqlash",
+        "feat_reviews": "Mijozlar sharhlari va reyting",
+        "feat_gallery": "Rasmlar galereyasi va mahsulot xususiyatlari",
+        "feat_admin": "Rollar va kirish huquqlari bilan admin panel",
+        "feat_analytics": "Analitika: savdo grafiklari, o'rtacha chek, CSV eksport",
+        "feat_telegram": "Buyurtmalar haqida Telegram xabarlari",
+        "feat_i18n": "Ikki tilli interfeys RU / UZ",
+        "feat_theme": "Qorong'u mavzu va mobil versiya",
+        "about_author_title": "Muallif",
+        "about_author_text": "Loyiha Toshkentlik backend dasturchi Jahongir tomonidan yaratilgan. Python, PostgreSQL, Flask — mening stekim.",
+        "about_note": "Bu portfolio-loyiha. Barcha tovarlar va buyurtmalar — namoyish uchun.",
     },
 }
 
@@ -967,6 +1029,11 @@ def track_order(oid):
         return redirect(url_for("track"))
     items = repo.get_order_items(oid)
     return render_template("track_order.html", order=order, items=items)
+
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
 
 
 @app.route("/set-lang/<lang>")
