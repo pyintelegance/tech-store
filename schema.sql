@@ -1,11 +1,15 @@
 -- Схема базы данных магазина техники tech-store
 -- Запуск: python db.py (создаёт БД, таблицы и наполняет данными)
 
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS coupons;
+DROP TABLE IF EXISTS product_images;
 DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS cities;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS admins;
 
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
@@ -25,9 +29,18 @@ CREATE TABLE products (
     price NUMERIC(12,2) NOT NULL,
     old_price NUMERIC(12,2),
     stock INTEGER NOT NULL DEFAULT 0,
-    image VARCHAR(255) NOT NULL,
+    image VARCHAR(500) NOT NULL DEFAULT 'no-image.png',
     rating NUMERIC(2,1) NOT NULL DEFAULT 5.0,
-    reviews INTEGER NOT NULL DEFAULT 0
+    reviews INTEGER NOT NULL DEFAULT 0,
+    specs JSONB NOT NULL DEFAULT '[]'::jsonb,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE TABLE product_images (
+    id SERIAL PRIMARY KEY,
+    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    url VARCHAR(500) NOT NULL,
+    position INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE cities (
@@ -47,6 +60,9 @@ CREATE TABLE orders (
     address2 VARCHAR(500),
     delivery_price NUMERIC(10,2) NOT NULL,
     delivery_minutes INTEGER NOT NULL,
+    subtotal NUMERIC(12,2) NOT NULL DEFAULT 0,
+    discount NUMERIC(12,2) NOT NULL DEFAULT 0,
+    coupon_code VARCHAR(50),
     total NUMERIC(12,2) NOT NULL,
     status VARCHAR(30) NOT NULL DEFAULT 'new',
     created_at TIMESTAMP NOT NULL DEFAULT now()
@@ -64,5 +80,23 @@ CREATE TABLE admins (
     id SERIAL PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE TABLE reviews (
+    id SERIAL PRIMARY KEY,
+    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    customer_name VARCHAR(200) NOT NULL,
+    rating INTEGER NOT NULL DEFAULT 5 CHECK (rating BETWEEN 1 AND 5),
+    text TEXT NOT NULL,
+    approved BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE TABLE coupons (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    discount_percent INTEGER NOT NULL DEFAULT 0 CHECK (discount_percent BETWEEN 1 AND 100),
+    active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT now()
 );
