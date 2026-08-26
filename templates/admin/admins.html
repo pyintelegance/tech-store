@@ -1,0 +1,52 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ t('admins_title') }}{% endblock %}
+{% block content %}
+<div class="admin-content">
+    <div class="admin-head">
+        <h2 class="admin-title">👥 {{ t('admins_title') }}</h2>
+        <a href="{{ url_for('admin_admin_new') }}" class="btn btn-primary">+ {{ t('add_admin') }}</a>
+    </div>
+    <div class="admin-table">
+        <table>
+            <thead>
+                <tr><th>ID</th><th>{{ t('login_admin') }}</th><th>{{ t('role') }}</th><th>{{ t('permissions_label') }}</th><th>{{ t('created') }}</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for a in admins %}
+                <tr>
+                    <td>{{ a.id }}</td>
+                    <td><strong>{{ a.username }}</strong></td>
+                    <td>
+                        {% if a.role == 'superadmin' %}
+                        <span class="status-pill status-processing">👑 {{ t('role_superadmin') }}</span>
+                        {% else %}
+                        <span class="status-pill status-new">{{ t('role_manager') }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set perms = a.permissions %}
+                        {% if a.role == 'superadmin' %}
+                        <span class="muted">{{ t('all_permissions') }}</span>
+                        {% elif perms %}
+                        <span class="muted">{{ perms|join(', ') }}</span>
+                        {% else %}
+                        <span class="muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ a.created_at.strftime('%d.%m.%Y') }}</td>
+                    <td class="table-actions">
+                        <a href="{{ url_for('admin_admin_edit', aid=a.id) }}" class="btn btn-sm">{{ t('edit') }}</a>
+                        {% if session.admin.id != a.id %}
+                        <form method="post" action="{{ url_for('admin_admin_delete', aid=a.id) }}" onsubmit="return confirm('{{ t('confirm_delete') }}')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-danger">{{ t('delete') }}</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
