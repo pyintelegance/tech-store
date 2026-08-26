@@ -1,0 +1,67 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ t('edit') if edit else t('add_admin') }}{% endblock %}
+{% block content %}
+<div class="admin-content narrow-form">
+    <div class="admin-head">
+        <h2 class="admin-title">{{ t('edit_admin') if edit else t('add_admin') }}</h2>
+        <a href="{{ url_for('admin_admins') }}" class="btn btn-sm">← {{ t('back') }}</a>
+    </div>
+    <form method="post" class="admin-form">
+        {{ form.hidden_tag() }}
+        <div class="form-grid">
+            <div class="field">
+                <label>{{ t('login_admin') }} *</label>
+                {{ form.username(class="input", autocomplete="off") }}
+            </div>
+            <div class="field">
+                <label>{{ t('password') }} {% if edit %}({{ t('optional_field') }}){% endif %}</label>
+                {{ form.password(class="input", autocomplete="new-password") }}
+                {% if edit %}<div class="muted small">{{ t('password_keep') }}</div>{% endif %}
+            </div>
+            <div class="field">
+                <label>{{ t('role') }} *</label>
+                {{ form.role(class="input") }}
+            </div>
+        </div>
+
+        <div class="field field-full" style="margin-top:14px">
+            <label>{{ t('permissions_label') }}</label>
+            <div class="perm-grid">
+                {% for key, label in permissions %}
+                <label class="perm-check">
+                    <input type="checkbox" name="{{ key }}" value="1"
+                        {% if edit %}
+                            {% set perms = form.permissions.data.split(',') if form.permissions.data else [] %}
+                            {% if key in perms %}checked{% endif %}
+                        {% endif %}
+                        {% if form.role.data == 'superadmin' and form.role.data %}disabled{% endif %}>
+                    <span>{{ label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            <div class="muted small">{{ t('select_permissions') }}</div>
+        </div>
+        {{ form.permissions(type="hidden") }}
+        <button type="submit" class="btn btn-primary btn-lg">{{ t('save') }}</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// При выборе роли «Генеральный» — блокируем чекбоксы (все права есть)
+var roleSelect = document.querySelector('select[name="role"]');
+var checks = document.querySelectorAll('.perm-check input[type="checkbox"]');
+function syncChecks() {
+    var isSuper = roleSelect.value === 'superadmin';
+    checks.forEach(function (c) {
+        c.disabled = isSuper;
+        if (isSuper) c.checked = false;
+    });
+}
+if (roleSelect) {
+    roleSelect.addEventListener('change', syncChecks);
+    syncChecks();
+}
+</script>
+{% endblock %}
