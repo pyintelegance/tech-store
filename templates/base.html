@@ -29,6 +29,11 @@
                 <button type="submit" class="search-btn">{{ t('search_btn') }}</button>
             </form>
             <nav class="nav">
+                <a href="{{ url_for('wishlist') }}" class="nav-link cart-link">
+                    <span class="cart-icon">❤️</span>
+                    <span class="cart-label">{{ t('wishlist') }}</span>
+                    {% if wish_count %}<span class="cart-badge wish-badge">{{ wish_count }}</span>{% endif %}
+                </a>
                 <a href="{{ url_for('cart') }}" class="nav-link cart-link">
                     <span class="cart-icon">🛒</span>
                     <span class="cart-label">{{ t('cart') }}</span>
@@ -38,6 +43,7 @@
                     <a href="{{ url_for('set_lang', lang='ru') }}" class="lang-btn{% if lang=='ru' %} active{% endif %}">Рус</a>
                     <a href="{{ url_for('set_lang', lang='uz') }}" class="lang-btn{% if lang=='uz' %} active{% endif %}">Uzb</a>
                 </div>
+                <button type="button" class="theme-toggle" id="theme-toggle" title="Тема">🌙</button>
                 {% if admin_logged_in %}
                 <a href="{{ url_for('admin_orders') }}" class="nav-link admin-link">🛠️</a>
                 {% endif %}
@@ -86,6 +92,8 @@
                     <a href="{{ url_for('index') }}">{{ t('search_btn') }}</a>
                     <a href="{{ url_for('cart') }}">{{ t('cart') }}</a>
                     <a href="{{ url_for('checkout') }}">{{ t('checkout') }}</a>
+                    <a href="{{ url_for('track') }}">{{ t('track') }}</a>
+                    <a href="{{ url_for('wishlist') }}">{{ t('wishlist') }}</a>
                 </div>
                 <div>
                     <h4>{{ t('contacts') }}</h4>
@@ -103,5 +111,13 @@
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
+    <div class="toast-container" id="toast-container"></div>
+    {% if cart_count %}
+    <a href="{{ url_for('cart') }}" class="mobile-cart">
+        <span class="mobile-cart-icon">🛒</span>
+        <span class="mobile-cart-count">{{ cart_count }}</span>
+        <span class="mobile-cart-label">{{ t('cart') }}</span>
+    </a>
+    {% endif %}
 </body>
 </html>
