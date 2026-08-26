@@ -24,6 +24,7 @@ from forms import (csrf, CheckoutForm, LoginForm, ProductForm,
 app = Flask(__name__)
 app.config["SECRET_KEY"] = config.SECRET_KEY
 app.config["WTF_CSRF_TIME_LIMIT"] = None
+app.config["WTF_CSRF_SSL_STRICT"] = False
 csrf.init_app(app)
 
 TRANSLATIONS = {
