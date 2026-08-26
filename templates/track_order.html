@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ t('track_order_title') }}{{ order.id }} — {{ t('brand') }}{% endblock %}
+{% block content %}
+<div class="container narrow">
+    <h1 class="page-title">{{ t('track_order_title') }}<span class="accent">{{ order.id }}</span></h1>
+
+    <div class="track-steps">
+        {% set steps = [('new', t('order_placed')), ('processing', t('order_processing')), ('delivered', t('order_delivered'))] %}
+        {% set current = order.status %}
+        {% set idx = {'new': 0, 'processing': 1, 'delivered': 2, 'cancelled': 3} %}
+        {% if current == 'cancelled' %}
+        <div class="track-step cancelled"><span class="ts-num">✕</span><span>{{ t('order_cancelled') }}</span></div>
+        {% else %}
+        {% for key, label in steps %}
+        <div class="track-step {% if idx[current] >= loop.index0 %}done{% endif %} {% if current == key %}active{% endif %}">
+            <span class="ts-num">{{ loop.index }}</span>
+            <span>{{ label }}</span>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <h3 class="panel-title">📋 {{ t('order_details') }}</h3>
+        {% for it in items %}
+        <div class="order-line">
+            <span>{{ it.product_name }} × {{ it.quantity }}</span>
+            <span>{{ it.price|money }} UZS</span>
+        </div>
+        {% endfor %}
+        {% if order.coupon_code %}
+        <div class="order-line"><span>🎟️ {{ order.coupon_code }}</span><span>−{{ order.discount|money }} UZS</span></div>
+        {% endif %}
+        <div class="order-line"><span>🚚 {{ t('delivery') }}</span><span>{{ order.delivery_price|money }} UZS · {{ order.delivery_minutes }} {{ t('minutes') }}</span></div>
+        <div class="order-line total-row"><span>{{ t('total') }}</span><span>{{ order.total|money }} UZS</span></div>
+        <div class="order-line"><span>📍 {{ order.city }}, {{ order.address }}{% if order.address2 %} ({{ order.address2 }}){% endif %}</span></div>
+        <div class="pay-note">💵 {{ t('pay_on_delivery') }}</div>
+    </div>
+
+    <a href="{{ url_for('index') }}" class="btn btn-block">{{ t('continue_shopping') }}</a>
+</div>
+{% endblock %}
