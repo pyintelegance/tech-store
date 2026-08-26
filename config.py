@@ -18,6 +18,13 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
+# Email-уведомления клиентам (пустые = отключено)
+SMTP_HOST = os.environ.get("SMTP_HOST", "")
+SMTP_PORT = os.environ.get("SMTP_PORT", "587")
+SMTP_USER = os.environ.get("SMTP_USER", "")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+SMTP_FROM = os.environ.get("SMTP_FROM", "")
+
 
 def dsn():
     return {
