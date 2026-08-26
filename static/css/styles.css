@@ -334,6 +334,15 @@ body {
 .review-form h4 { font-size: 16px; margin-bottom: 14px; }
 .review-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
 .review-form .field textarea { resize: vertical; }
+
+.star-rating { display: inline-flex; flex-direction: row-reverse; gap: 4px; }
+.star-btn {
+    background: none; border: none; cursor: pointer; padding: 2px;
+    font-size: 30px; line-height: 1; color: #cbd5e1; transition: .15s;
+}
+.star-btn:hover, .star-btn:hover ~ .star-btn,
+.star-btn.active, .star-btn.active ~ .star-btn { color: var(--accent); }
+.star-btn:hover { transform: scale(1.2); }
 .product-info { display: flex; flex-direction: column; gap: 14px; }
 .product-title { font-size: 28px; font-weight: 800; letter-spacing: -.8px; line-height: 1.25; }
 .product-rating { color: var(--accent); font-weight: 700; font-size: 15px; }
