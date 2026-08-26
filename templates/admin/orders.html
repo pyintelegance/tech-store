@@ -31,6 +31,9 @@
                     <div class="admin-order-item"><span>{{ it.product_name }} × {{ it.quantity }}</span><span>{{ it.price|money }} UZS</span></div>
                     {% endfor %}
                 </div>
+                {% if o.order.coupon_code %}
+                <div class="admin-order-total">🎟️ {{ o.order.coupon_code }}: −{{ o.order.discount|money }} UZS</div>
+                {% endif %}
                 <div class="admin-order-total">{{ t('total') }}: <strong>{{ o.order.total|money }} UZS</strong></div>
             </div>
             <form method="post" action="{{ url_for('admin_order_status', oid=o.order.id) }}" class="admin-order-status">
