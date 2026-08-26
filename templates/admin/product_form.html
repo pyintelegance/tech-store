@@ -46,7 +46,7 @@
                 <div class="img-upload-row">
                     <div class="img-preview">
                         {% if product %}
-                        <img src="{{ url_for('static', filename='img/' + product.image) }}" alt="" id="img-preview">
+                        <img src="{{ product.image|product_img }}" alt="" id="img-preview">
                         {% else %}
                         <img src="" alt="" id="img-preview" style="display:none">
                         {% endif %}
