@@ -1,4 +1,4 @@
-{% extends "admin/base.html" %}
+﻿{% extends "admin/base.html" %}
 {% block title %}{{ t('products') }}{% endblock %}
 {% block content %}
 <div class="admin-content">
@@ -21,7 +21,7 @@
             <tbody>
                 {% for p in products %}
                 <tr>
-                    <td><img src="{{ url_for('static', filename='img/' + p.image) }}" class="table-img" alt=""></td>
+                    <td><img src="{{ p.image|product_img }}" class="table-img" alt=""></td>
                     <td>
                         <div class="table-title">{{ p.name_ru }}</div>
                         <div class="table-sub">{{ p.cat_ru }}</div>
