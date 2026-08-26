@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}{{ t('order_title') }} — {{ t('brand') }}{% endblock %}
+{% block content %}
+<div class="container narrow">
+    <h1 class="page-title">{{ t('order_title') }}</h1>
+
+    {% if errors %}<div class="alert error">{% for e in errors %}<div>{{ e }}</div>{% endfor %}</div>{% endif %}
+
+    <form method="post" class="checkout-form" id="checkout-form">
+        {{ form.hidden_tag() }}
+        <div class="panel">
+            <h3 class="panel-title">{{ t('your_info') }}</h3>
+            <div class="field">
+                <label for="name">{{ t('name') }} *</label>
+                {{ form.name(id="name", placeholder=t('name'), class="input") }}
+            </div>
+            <div class="field">
+                <label for="phone">{{ t('phone') }} *</label>
+                {{ form.phone(id="phone", placeholder="+998 90 000 00 00", class="input") }}
+            </div>
+            <div class="field">
+                <label for="city">{{ t('city') }} *</label>
+                <select id="city" name="city" class="input" required>
+                    <option value="">{{ t('city_placeholder') }}</option>
+                    {% for c in cities %}
+                    <option value="{{ c.id }}" data-price="{{ c.delivery_price }}" data-mins="{{ c.delivery_minutes }}"
+                        {% if form.city.data|string == c.id|string %}selected{% endif %}>
+                        {{ c.name_ru if lang=='ru' else c.name_uz }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field">
+                <label for="address">{{ t('address') }} *</label>
+                {{ form.address(id="address", placeholder=t('address_ph'), class="input") }}
+            </div>
+            <div class="field">
+                <label for="address2">{{ t('address2') }}</label>
+                {{ form.address2(id="address2", placeholder=t('address2_ph'), class="input") }}
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3 class="panel-title">{{ t('order') }}</h3>
+            {% for it in items %}
+            <div class="order-line">
+                <span>{{ it.name_ru if lang=='ru' else it.name_uz }} × {{ it.qty }}</span>
+                <span>{{ it.subtotal|money }} UZS</span>
+            </div>
+            {% endfor %}
+            <div class="order-line">
+                <span>{{ t('items_total') }}</span><span>{{ total|money }} UZS</span>
+            </div>
+            <div class="order-line delivery-line">
+                <span>{{ t('delivery') }} <span class="delivery-meta" id="delivery-meta"></span></span>
+                <span id="delivery-price">—</span>
+            </div>
+            <div class="order-line total-row">
+                <span>{{ t('total') }}</span><span id="grand-total">{{ total|money }} UZS</span>
+            </div>
+            <div class="pay-note">💵 {{ t('pay_on_delivery') }}</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg">{{ t('place_order') }}</button>
+        <a href="{{ url_for('cart') }}" class="btn btn-block">{{ t('back_cart') }}</a>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var total = {{ total }};
+    var citySel = document.getElementById('city');
+    var priceEl = document.getElementById('delivery-price');
+    var metaEl = document.getElementById('delivery-meta');
+    var grandEl = document.getElementById('grand-total');
+    var minsLabel = "{{ t('minutes') }}";
+
+    function fmt(v) {
+        return Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+
+    function update() {
+        var opt = citySel.options[citySel.selectedIndex];
+        if (opt && opt.dataset.price !== undefined) {
+            var dprice = parseFloat(opt.dataset.price);
+            var dmins = opt.dataset.mins;
+            priceEl.textContent = fmt(dprice) + " UZS";
+            metaEl.textContent = "≈ " + dmins + " " + minsLabel;
+            grandEl.textContent = fmt(total + dprice) + " UZS";
+        } else {
+            priceEl.textContent = "—";
+            metaEl.textContent = "";
+            grandEl.textContent = fmt(total) + " UZS";
+        }
+    }
+    citySel.addEventListener('change', update);
+})();
+</script>
+{% endblock %}

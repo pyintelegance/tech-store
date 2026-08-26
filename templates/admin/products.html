@@ -1,0 +1,45 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ t('products') }}{% endblock %}
+{% block content %}
+<div class="admin-content">
+    <div class="admin-head">
+        <h2 class="admin-title">{{ t('products') }} <span class="count">{{ products|length }}</span></h2>
+        <a href="{{ url_for('admin_product_new') }}" class="btn btn-primary">+ {{ t('add_product') }}</a>
+    </div>
+    <div class="admin-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('image') }}</th>
+                    <th>{{ t('product') }}</th>
+                    <th>{{ t('price') }}</th>
+                    <th>{{ t('stock') }}</th>
+                    <th>{{ t('rating') }}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td><img src="{{ url_for('static', filename='img/' + p.image) }}" class="table-img" alt=""></td>
+                    <td>
+                        <div class="table-title">{{ p.name_ru }}</div>
+                        <div class="table-sub">{{ p.cat_ru }}</div>
+                    </td>
+                    <td>{{ p.price|money }} UZS</td>
+                    <td><span class="stock-badge {% if p.stock<=0 %}zero{% endif %}">{{ p.stock }}</span></td>
+                    <td>★ {{ p.rating }} <span class="muted">({{ p.reviews }})</span></td>
+                    <td class="table-actions">
+                        <a href="{{ url_for('admin_product_edit', pid=p.id) }}" class="btn btn-sm">{{ t('edit') }}</a>
+                        <form method="post" action="{{ url_for('admin_product_delete', pid=p.id) }}" onsubmit="return confirm('{{ t('confirm_delete') }}')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-danger">{{ t('delete') }}</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ t('categories') }}{% endblock %}
+{% block content %}
+<div class="admin-content">
+    <div class="admin-head">
+        <h2 class="admin-title">{{ t('categories') }}</h2>
+    </div>
+    <div class="admin-split">
+        <div class="admin-table">
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>{{ t('categories') }}</th><th>Slug</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for c in categories %}
+                    <tr>
+                        <td>{{ c.id }}</td>
+                        <td>{{ c.icon }} {{ c.name_ru }} / {{ c.name_uz }}</td>
+                        <td class="muted">{{ c.slug }}</td>
+                        <td class="table-actions">
+                            <form method="post" action="{{ url_for('admin_category_delete', cid=c.id) }}" onsubmit="return confirm('{{ t('confirm_delete') }}')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-danger">{{ t('delete') }}</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <form method="post" class="admin-form side-form">
+            {{ form.hidden_tag() }}
+            <h3>+ {{ t('categories') }}</h3>
+            <div class="field"><label>Slug *</label>{{ form.slug(class="input") }}</div>
+            <div class="field"><label>RU *</label>{{ form.name_ru(class="input") }}</div>
+            <div class="field"><label>UZ *</label>{{ form.name_uz(class="input") }}</div>
+            <div class="field"><label>Icon *</label>{{ form.icon(class="input") }}</div>
+            <button type="submit" class="btn btn-primary">{{ t('save') }}</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ t('products') }}{% endblock %}
+{% block content %}
+<div class="admin-content narrow-form">
+    <div class="admin-head">
+        <h2 class="admin-title">{{ t('edit') if product else t('add_product') }}</h2>
+        <a href="{{ url_for('admin_products') }}" class="btn btn-sm">← {{ t('back') }}</a>
+    </div>
+    <form method="post" class="admin-form">
+        {{ form.hidden_tag() }}
+        <div class="form-grid">
+            <div class="field">
+                <label>{{ t('product') }} *</label>
+                {{ form.name_ru(class="input") }}
+            </div>
+            <div class="field">
+                <label>{{ t('product') }} UZ *</label>
+                {{ form.name_uz(class="input") }}
+            </div>
+            <div class="field">
+                <label>{{ t('categories') }} *</label>
+                {{ form.category_id(class="input") }}
+            </div>
+            <div class="field">
+                <label>{{ t('price') }} (UZS) *</label>
+                {{ form.price(class="input") }}
+            </div>
+            <div class="field">
+                <label>{{ t('old_price') if lang=='ru' else t('old_price') }} (UZS)</label>
+                {{ form.old_price(class="input") }}
+            </div>
+            <div class="field">
+                <label>{{ t('stock') }} *</label>
+                {{ form.stock(class="input") }}
+            </div>
+            <div class="field">
+                <label>{{ t('image') }} *</label>
+                {{ form.image(class="input", placeholder="iphone15pro.png") }}
+            </div>
+            <div class="field">
+                <label>{{ t('rating') }}</label>
+                {{ form.rating(class="input") }}
+            </div>
+            <div class="field">
+                <label>{{ t('reviews_count') }}</label>
+                {{ form.reviews(class="input") }}
+            </div>
+            <div class="field field-full">
+                <label>{{ t('description') }} RU *</label>
+                {{ form.description_ru(class="input", rows=3) }}
+            </div>
+            <div class="field field-full">
+                <label>{{ t('description') }} UZ *</label>
+                {{ form.description_uz(class="input", rows=3) }}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg">{{ t('save') }}</button>
+    </form>
+</div>
+{% endblock %}

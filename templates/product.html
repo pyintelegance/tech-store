@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}{{ p['name_ru'] if lang=='ru' else p['name_uz'] }} — {{ t('brand') }}{% endblock %}
+{% block content %}
+<div class="container">
+    <nav class="breadcrumbs">
+        <a href="{{ url_for('index') }}">{{ t('catalog') }}</a> / {{ p.cat_ru if lang=='ru' else p.cat_uz }}
+    </nav>
+
+    <div class="product-page">
+        <div class="product-gallery">
+            <img src="{{ url_for('static', filename='img/' + p.image) }}" alt="{{ p['name_ru'] if lang=='ru' else p['name_uz'] }}" class="product-img">
+        </div>
+        <div class="product-info">
+            <h1 class="product-title">{{ p['name_ru'] if lang=='ru' else p['name_uz'] }}</h1>
+            <div class="product-rating">★ {{ p.rating }} <span class="muted">({{ p.reviews }} {{ t('reviews') }})</span></div>
+            <div class="product-stock {% if p.stock<=0 %}out{% endif %}">
+                {% if p.stock>0 %}{{ t('in_stock') }}: {{ p.stock }}{% else %}{{ t('out_of_stock') }}{% endif %}
+            </div>
+
+            <div class="product-price-block">
+                <div class="product-price">{{ p.price|money }} <span class="cur">UZS</span></div>
+                {% if p.old_price %}<div class="old-price">{{ p.old_price|money }} UZS</div>{% endif %}
+            </div>
+
+            {% if p.stock > 0 %}
+            <form method="post" action="{{ url_for('cart_add') }}" class="buy-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="product_id" value="{{ p.id }}">
+                <div class="qty-control">
+                    <button type="button" class="qty-btn" data-dir="-1">−</button>
+                    <input type="number" name="qty" value="1" min="1" max="{{ p.stock }}" class="qty-input">
+                    <button type="button" class="qty-btn" data-dir="1">+</button>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg">{{ t('buy') }}</button>
+            </form>
+            {% else %}
+            <div class="btn btn-lg disabled">{{ t('out_of_stock') }}</div>
+            {% endif %}
+
+            <div class="product-desc">
+                <h3>{{ t('description') }}</h3>
+                <p>{{ p['description_ru'] if lang=='ru' else p['description_uz'] }}</p>
+            </div>
+        </div>
+    </div>
+
+    {% if related %}
+    <h2 class="section-title">{{ t('details') }}</h2>
+    <div class="grid">
+        {% for r in related %}
+        <div class="card">
+            <a href="{{ url_for('product', pid=r.id) }}" class="card-img-wrap">
+                <img src="{{ url_for('static', filename='img/' + r.image) }}" alt="{{ r['name_ru'] if lang=='ru' else r['name_uz'] }}" class="card-img">
+            </a>
+            <div class="card-body">
+                <a href="{{ url_for('product', pid=r.id) }}" class="card-title">{{ r['name_ru'] if lang=='ru' else r['name_uz'] }}</a>
+                <div class="card-rating">★ {{ r.rating }}</div>
+                <div class="card-price-row">
+                    <div class="price">{{ r.price|money }} <span class="cur">UZS</span></div>
+                    {% if r.stock > 0 %}
+                    <form method="post" action="{{ url_for('cart_add') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="product_id" value="{{ r.id }}">
+                        <button type="submit" class="btn add-btn" title="{{ t('buy') }}">+</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

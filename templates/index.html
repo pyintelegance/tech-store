@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ t('catalog') }} — {{ t('brand') }}{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <h1 class="hero-title">{{ t('brand') }}</h1>
+        <p class="hero-sub">{{ t('tagline') }}</p>
+    </div>
+</section>
+
+<div class="container">
+    <div class="toolbar">
+        <div class="cats">
+            <a href="{{ url_for('index') }}" class="cat-chip{% if not active_category %} active{% endif %}">{{ t('all') }}</a>
+            {% for c in categories %}
+            <a href="{{ url_for('index', category=c.id, q=q, sort=sort, min_price=min_price, max_price=max_price) }}"
+               class="cat-chip{% if active_category == c.id|string %} active{% endif %}">
+                <span class="cat-icon">{{ c.icon }}</span>{{ c.name_ru if lang=='ru' else c.name_uz }}
+            </a>
+            {% endfor %}
+        </div>
+        <div class="sort">
+            <select class="sort-select" onchange="location=this.value;">
+                {% for key, label in [('popular', t('sort_popular')), ('cheap', t('sort_cheap')), ('expensive', t('sort_expensive')), ('rating', t('sort_rating'))] %}
+                <option value="{{ url_for('index', category=active_category, q=q, sort=key, min_price=min_price, max_price=max_price) }}" {% if sort==key %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="toolbar-row">
+        <form class="price-filter" action="{{ url_for('index') }}" method="get">
+            <input type="hidden" name="q" value="{{ q }}">
+            <input type="hidden" name="category" value="{{ active_category }}">
+            <input type="hidden" name="sort" value="{{ sort }}">
+            <input type="number" name="min_price" value="{{ min_price }}" min="0" placeholder="{{ t('price_from') }}" class="price-input">
+            <span class="price-sep">—</span>
+            <input type="number" name="max_price" value="{{ max_price }}" min="0" placeholder="{{ t('price_to') }}" class="price-input">
+            <button type="submit" class="btn btn-sm">{{ t('apply') }}</button>
+            <a href="{{ url_for('index') }}" class="btn btn-sm">{{ t('reset') }}</a>
+        </form>
+    </div>
+
+    {% if products %}
+    <div class="grid">
+        {% for p in products %}
+        <div class="card">
+            <a href="{{ url_for('product', pid=p.id) }}" class="card-img-wrap">
+                <img src="{{ url_for('static', filename='img/' + p.image) }}"
+                     alt="{{ p['name_ru'] if lang=='ru' else p['name_uz'] }}" class="card-img">
+                {% if p.old_price %}<span class="badge sale">-{{ ((1 - p.price / p.old_price) * 100)|round|int }}%</span>{% endif %}
+            </a>
+            <div class="card-body">
+                <div class="card-cat">{{ p.cat_icon }} {{ p.cat_ru if lang=='ru' else p.cat_uz }}</div>
+                <a href="{{ url_for('product', pid=p.id) }}" class="card-title">
+                    {{ p['name_ru'] if lang=='ru' else p['name_uz'] }}
+                </a>
+                <div class="card-rating">★ {{ p.rating }} <span class="muted">({{ p.reviews }})</span></div>
+                <div class="card-price-row">
+                    <div>
+                        <div class="price">{{ p.price|money }} <span class="cur">UZS</span></div>
+                        {% if p.old_price %}<div class="old-price">{{ p.old_price|money }} UZS</div>{% endif %}
+                    </div>
+                    {% if p.stock > 0 %}
+                    <form method="post" action="{{ url_for('cart_add') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="product_id" value="{{ p.id }}">
+                        <button type="submit" class="btn add-btn" title="{{ t('buy') }}">+</button>
+                    </form>
+                    {% else %}
+                    <span class="out">{{ t('out_of_stock') }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+        <div class="empty-icon">🔍</div>
+        <h3>{{ t('empty_catalog') }}</h3>
+        <p>{{ t('empty_catalog_hint') }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ t('orders') }}{% endblock %}
+{% block content %}
+<div class="admin-content">
+    <div class="admin-head">
+        <h2 class="admin-title">{{ t('orders_list') }}</h2>
+        <div class="status-tabs">
+            <a href="{{ url_for('admin_orders') }}" class="status-tab{% if not status_filter %} active{% endif %}">{{ t('all') }}</a>
+            {% for s in statuses %}
+            <a href="{{ url_for('admin_orders', status=s) }}" class="status-tab{% if status_filter==s %} active{% endif %}">{{ t('status_' + s) }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if orders %}
+    <div class="admin-cards">
+        {% for o in orders %}
+        <div class="admin-order">
+            <div class="admin-order-head">
+                <strong>#{{ o.order.id }}</strong>
+                <span class="status-pill status-{{ o.order.status }}">{{ t('status_' + o.order.status) }}</span>
+            </div>
+            <div class="admin-order-body">
+                <div class="admin-order-row"><span>{{ t('date') }}</span><span>{{ o.order.created_at.strftime('%d.%m.%Y %H:%M') }}</span></div>
+                <div class="admin-order-row"><span>{{ t('customer') }}</span><span>{{ o.order.customer_name }} · {{ o.order.phone }}</span></div>
+                <div class="admin-order-row"><span>{{ t('city') }}</span><span>{{ o.order.city }}</span></div>
+                <div class="admin-order-row"><span>{{ t('address') }}</span><span>{{ o.order.address }}{% if o.order.address2 %} ({{ o.order.address2 }}){% endif %}</span></div>
+                <div class="admin-order-row"><span>{{ t('delivery') }}</span><span>{{ o.order.delivery_price|money }} UZS · {{ o.order.delivery_minutes }} {{ t('minutes') }}</span></div>
+                <div class="admin-order-items">
+                    {% for it in o.order_items %}
+                    <div class="admin-order-item"><span>{{ it.product_name }} × {{ it.quantity }}</span><span>{{ it.price|money }} UZS</span></div>
+                    {% endfor %}
+                </div>
+                <div class="admin-order-total">{{ t('total') }}: <strong>{{ o.order.total|money }} UZS</strong></div>
+            </div>
+            <form method="post" action="{{ url_for('admin_order_status', oid=o.order.id) }}" class="admin-order-status">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <select name="status" class="input" onchange="this.form.submit()">
+                    {% for s in statuses %}
+                    <option value="{{ s }}" {% if o.order.status==s %}selected{% endif %}>{{ t('status_' + s) }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty"><div class="empty-icon">📦</div><h3>{{ t('orders') }} — 0</h3></div>
+    {% endif %}
+</div>
+{% endblock %}
