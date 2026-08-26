@@ -1,3 +1,21 @@
+// Анимация появления при скролле
+(function () {
+    var els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window) || !els.length) {
+        els.forEach(function (el) { el.classList.add('visible'); });
+        return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                io.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.08 });
+    els.forEach(function (el) { io.observe(el); });
+})();
+
 // Управление количеством (+/−) в формах
 document.querySelectorAll('.qty-control').forEach(function (ctrl) {
     var input = ctrl.querySelector('.qty-input');
@@ -10,7 +28,6 @@ document.querySelectorAll('.qty-control').forEach(function (ctrl) {
             var max = parseInt(input.max, 10);
             if (max && val > max) val = max;
             input.value = val;
-            // авто-отправка формы (на странице корзины)
             if (ctrl.closest('form')) {
                 ctrl.closest('form').submit();
             }
@@ -23,14 +40,10 @@ document.querySelectorAll('.add-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
         var original = btn.textContent;
         btn.textContent = '✓';
-        btn.style.background = '#16a34a';
-        btn.style.borderColor = '#16a34a';
-        btn.style.color = '#fff';
+        btn.classList.add('added');
         setTimeout(function () {
             btn.textContent = original;
-            btn.style.background = '';
-            btn.style.borderColor = '';
-            btn.style.color = '';
+            btn.classList.remove('added');
         }, 1200);
     });
 });
