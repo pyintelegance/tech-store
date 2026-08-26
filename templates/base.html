@@ -29,6 +29,7 @@
                 <button type="submit" class="search-btn">{{ t('search_btn') }}</button>
             </form>
             <nav class="nav">
+                <a href="{{ url_for('about') }}" class="nav-link">{{ t('about') }}</a>
                 <a href="{{ url_for('wishlist') }}" class="nav-link cart-link">
                     <span class="cart-icon">❤️</span>
                     <span class="cart-label">{{ t('wishlist') }}</span>
@@ -89,6 +90,7 @@
                 </div>
                 <div>
                     <h4>{{ t('help') }}</h4>
+                    <a href="{{ url_for('about') }}">{{ t('about') }}</a>
                     <a href="{{ url_for('index') }}">{{ t('search_btn') }}</a>
                     <a href="{{ url_for('cart') }}">{{ t('cart') }}</a>
                     <a href="{{ url_for('checkout') }}">{{ t('checkout') }}</a>
