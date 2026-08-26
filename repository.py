@@ -34,7 +34,7 @@ def delete_category(category_id):
 # ---------- Товары ----------
 
 def get_products(filters=None):
-    """filters: q, category, sort, min_price, max_price."""
+    """filters: q, category, sort, min_price, max_price, page, per_page."""
     f = filters or {}
     where, params = [], []
 
@@ -71,7 +71,23 @@ def get_products(filters=None):
     if where:
         sql += " WHERE " + " AND ".join(where)
     sql += " " + order
-    return db.fetch_all(sql, params)
+
+    page = int(f.get("page", 1) or 1)
+    per_page = int(f.get("per_page", 12) or 12)
+    if page < 1:
+        page = 1
+
+    count_sql = "SELECT COUNT(*) AS total FROM products p JOIN categories c ON c.id=p.category_id"
+    if where:
+        count_sql += " WHERE " + " AND ".join(where)
+    total_row = db.fetch_one(count_sql, params)
+    total = total_row["total"] if total_row else 0
+
+    offset = (page - 1) * per_page
+    sql += f" LIMIT {per_page} OFFSET {offset}"
+    rows = db.fetch_all(sql, params)
+
+    return rows, total, page, per_page
 
 
 def get_product(product_id):
@@ -220,21 +236,21 @@ def create_order(customer_name, phone, city, address, address2,
         conn.close()
 
 
-def create_order_full(customer_name, phone, city, address, address2,
+def create_order_full(customer_name, phone, email, city, address, address2,
                       delivery_price, delivery_minutes, subtotal, discount,
                       coupon_code, total, items):
     """Создаёт заказ с полными полями (скидки/промокод) в транзакции."""
     sql_order = (
         "INSERT INTO orders "
-        "(customer_name, phone, city, address, address2, "
+        "(customer_name, phone, email, city, address, address2, "
         "delivery_price, delivery_minutes, subtotal, discount, coupon_code, total, status) "
-        "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'new') RETURNING id"
+        "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'new') RETURNING id"
     )
     conn = db.get_conn()
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             cur.execute(sql_order, (
-                customer_name, phone, city, address, address2,
+                customer_name, phone, email, city, address, address2,
                 delivery_price, delivery_minutes, subtotal, discount,
                 coupon_code, total,
             ))
@@ -471,12 +487,16 @@ def analytics_summary():
     reviews_total = db.fetch_one(
         "SELECT COUNT(*) AS count FROM reviews WHERE approved=TRUE"
     )
+    count = orders_total["count"] if orders_total else 0
+    revenue = float(orders_total["sum"]) if orders_total else 0
+    avg_check = round(revenue / count, 2) if count else 0
     return {
-        "orders_count": orders_total["count"],
-        "revenue": float(orders_total["sum"]),
-        "new_orders": new_orders["count"],
-        "products_count": products_total["count"],
-        "reviews_count": reviews_total["count"],
+        "orders_count": count,
+        "revenue": revenue,
+        "avg_check": avg_check,
+        "new_orders": new_orders["count"] if new_orders else 0,
+        "products_count": products_total["count"] if products_total else 0,
+        "reviews_count": reviews_total["count"] if reviews_total else 0,
     }
 
 
@@ -495,6 +515,18 @@ def analytics_sales_by_day(days=14):
            GROUP BY date_trunc('day', created_at)
            ORDER BY day ASC""",
         (int(days),),
+    )
+
+
+def analytics_sales_by_month(limit=6):
+    return db.fetch_all(
+        """SELECT to_char(date_trunc('month', created_at), 'YYYY-MM') AS month,
+                  COUNT(*) AS count, SUM(total) AS total
+           FROM orders
+           GROUP BY date_trunc('month', created_at)
+           ORDER BY month ASC
+           LIMIT %s""",
+        (limit,),
     )
 
 
