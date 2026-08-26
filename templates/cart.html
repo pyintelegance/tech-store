@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block title %}{{ t('cart') }} — {{ t('brand') }}{% endblock %}
 {% block content %}
 <div class="container">
@@ -9,7 +9,7 @@
         <div class="cart-items">
             {% for it in items %}
             <div class="cart-item">
-                <img src="{{ url_for('static', filename='img/' + it.image) }}" alt="" class="cart-item-img">
+                <img src="{{ it.image|product_img }}" alt="" class="cart-item-img">
                 <div class="cart-item-info">
                     <div class="cart-item-name">{{ it.name_ru if lang=='ru' else it.name_uz }}</div>
                     <div class="cart-item-price">{{ it.price|money }} UZS</div>
