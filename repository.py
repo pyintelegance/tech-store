@@ -319,11 +319,15 @@ def get_all_reviews(status=None):
 
 
 def create_review(product_id, customer_name, rating, text):
-    return db.execute_returning(
-        "INSERT INTO reviews (product_id, customer_name, rating, text) "
-        "VALUES (%s,%s,%s,%s) RETURNING id",
+    """Создаёт отзыв сразу одобренным (без модерации)."""
+    row = db.execute_returning(
+        "INSERT INTO reviews (product_id, customer_name, rating, text, approved) "
+        "VALUES (%s,%s,%s,%s,TRUE) RETURNING id",
         (product_id, customer_name, rating, text),
     )
+    if row:
+        recalc_product_rating(product_id)
+    return row
 
 
 def approve_review(review_id, approved=True):
@@ -381,6 +385,76 @@ def update_coupon(coupon_id, code, discount_percent, active):
 
 def delete_coupon(coupon_id):
     return db.execute("DELETE FROM coupons WHERE id=%s", (coupon_id,))
+
+
+# ---------- Администраторы ----------
+
+def get_admins():
+    return db.fetch_all(
+        "SELECT id, username, role, permissions, created_at FROM admins ORDER BY id"
+    )
+
+
+def get_admin_by_id(admin_id):
+    return db.fetch_one(
+        "SELECT id, username, role, permissions, created_at FROM admins WHERE id=%s",
+        (admin_id,),
+    )
+
+
+def get_admin_by_username(username):
+    return db.fetch_one("SELECT * FROM admins WHERE username=%s", (username,))
+
+
+def create_admin(username, password_hash, role="manager", permissions=None):
+    import json as _json
+    perms = _json.dumps(permissions or [], ensure_ascii=False)
+    return db.execute_returning(
+        "INSERT INTO admins (username, password_hash, role, permissions) "
+        "VALUES (%s,%s,%s,%s) RETURNING id",
+        (username, password_hash, role, perms),
+    )
+
+
+def update_admin(admin_id, username, password_hash=None, role=None, permissions=None):
+    import json as _json
+    if password_hash is not None or role is not None or permissions is not None:
+        sets = []
+        params = []
+        if password_hash is not None:
+            sets.append("password_hash=%s")
+            params.append(password_hash)
+        if role is not None:
+            sets.append("role=%s")
+            params.append(role)
+        if permissions is not None:
+            sets.append("permissions=%s")
+            params.append(_json.dumps(permissions, ensure_ascii=False))
+        params.append(admin_id)
+        sets.append("username=%s") if False else None
+        # username тоже обновляем если передали
+        return db.execute(
+            "UPDATE admins SET " + ", ".join(sets) + " WHERE id=%s", params
+        )
+    return 0
+
+
+def delete_admin(admin_id):
+    return db.execute("DELETE FROM admins WHERE id=%s", (admin_id,))
+
+
+def admin_has_permission(admin, permission):
+    """Проверяет право админа. Суперадмин имеет все права."""
+    if admin.get("role") == "superadmin":
+        return True
+    perms = admin.get("permissions") or []
+    import json as _json
+    if isinstance(perms, str):
+        try:
+            perms = _json.loads(perms)
+        except Exception:
+            perms = []
+    return permission in perms
 
 
 # ---------- Аналитика ----------
