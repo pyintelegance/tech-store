@@ -7,11 +7,11 @@
         <h1 class="page-title">{{ t('order_success_title') }}</h1>
         <p>{{ t('order_success_text') }}</p>
         <div class="success-box">
-            <div class="success-row"><span>{{ t('order_number') }}</span><strong>#{{ order_id }}</strong></div>
-            <div class="success-row"><span>{{ t('delivery') }}</span><strong>{{ delivery_price|money }} UZS · {{ delivery_minutes }} {{ t('minutes') }}</strong></div>
+            <div class="success-row"><span>📋 {{ t('order_number') }}</span><strong>#{{ order_id }}</strong></div>
+            <div class="success-row"><span>🚚 {{ t('delivery') }}</span><strong>{{ delivery_price|money }} UZS · {{ delivery_minutes }} {{ t('minutes') }}</strong></div>
             <div class="success-row total-row"><span>{{ t('total') }}</span><strong>{{ total|money }} UZS</strong></div>
         </div>
-        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">{{ t('continue_shopping') }}</a>
+        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">🛍️ {{ t('continue_shopping') }}</a>
     </div>
 </div>
 {% endblock %}
