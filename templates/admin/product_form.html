@@ -61,6 +61,22 @@
                 {{ form.image(type="hidden") }}
             </div>
             <div class="field field-full">
+                <label>{{ t('specs_label') }}</label>
+                {{ form.specs(class="input", rows=5, placeholder="Экран: 6.1\&quot; OLED\nКамера: 48 Мп\nПамять: 256 ГБ") }}
+            </div>
+            <div class="field field-full">
+                <label>{{ t('gallery_label') }}</label>
+                {{ form.gallery_files(class="input-file", id="gallery_files", accept="image/*", multiple="multiple") }}
+                {% if images %}
+                <div class="gallery-preview">
+                    {% for img in images %}
+                    <div class="gallery-thumb"><img src="{{ img.url|product_img }}" alt=""></div>
+                    {% endfor %}
+                </div>
+                <div class="muted small">Текущие фото. При выборе новых — заменят старые</div>
+                {% endif %}
+            </div>
+            <div class="field field-full">
                 <label>{{ t('description') }} RU *</label>
                 {{ form.description_ru(class="input", rows=3) }}
             </div>
