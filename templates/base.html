@@ -5,10 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ t('brand') }}{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
+    <div class="topbar">
+        <div class="container topbar-inner">
+            <span class="topbar-item">🚚 {{ t('topbar_delivery') }}</span>
+            <span class="topbar-item">🔒 {{ t('topbar_secure') }}</span>
+        </div>
+    </div>
+
     <header class="header">
         <div class="container header-inner">
             <a href="{{ url_for('index') }}" class="logo">
@@ -21,10 +29,9 @@
                 <button type="submit" class="search-btn">{{ t('search_btn') }}</button>
             </form>
             <nav class="nav">
-                <a href="{{ url_for('index') }}" class="nav-link">{{ t('catalog') }}</a>
                 <a href="{{ url_for('cart') }}" class="nav-link cart-link">
                     <span class="cart-icon">🛒</span>
-                    {{ t('cart') }}
+                    <span class="cart-label">{{ t('cart') }}</span>
                     {% if cart_count %}<span class="cart-badge">{{ cart_count }}</span>{% endif %}
                 </a>
                 <div class="lang-switch">
@@ -35,6 +42,16 @@
                 <a href="{{ url_for('admin_orders') }}" class="nav-link admin-link">🛠️</a>
                 {% endif %}
             </nav>
+        </div>
+        <div class="catnav">
+            <div class="catnav-inner">
+                <a href="{{ url_for('index') }}" class="{% if not active_category %}active{% endif %}">{{ t('all') }}</a>
+                {% for c in categories %}
+                <a href="{{ url_for('index', category=c.id, q=q, sort=sort) }}" class="{% if active_category == c.id|string %}active{% endif %}">
+                    {{ c.icon }} {{ c.name_ru if lang=='ru' else c.name_uz }}
+                </a>
+                {% endfor %}
+            </div>
         </div>
     </header>
 
@@ -53,7 +70,34 @@
 
     <footer class="footer">
         <div class="container">
-            <p>{{ t('footer_text') }}</p>
+            <div class="footer-grid">
+                <div>
+                    <div class="footer-brand">🛒 {{ t('brand') }}</div>
+                    <p class="footer-desc">{{ t('tagline') }}</p>
+                </div>
+                <div>
+                    <h4>{{ t('catalog') }}</h4>
+                    {% for c in categories %}
+                    <a href="{{ url_for('index', category=c.id) }}">{{ c.name_ru if lang=='ru' else c.name_uz }}</a>
+                    {% endfor %}
+                </div>
+                <div>
+                    <h4>{{ t('help') }}</h4>
+                    <a href="{{ url_for('index') }}">{{ t('search_btn') }}</a>
+                    <a href="{{ url_for('cart') }}">{{ t('cart') }}</a>
+                    <a href="{{ url_for('checkout') }}">{{ t('checkout') }}</a>
+                </div>
+                <div>
+                    <h4>{{ t('contacts') }}</h4>
+                    <a href="#">+998 90 000 00 00</a>
+                    <a href="#">@techstore_uz</a>
+                    <a href="#">Tashkent, Uzbekistan</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>{{ t('footer_text') }}</span>
+                <span>🛒 {{ t('brand') }} 2026</span>
+            </div>
         </div>
     </footer>
 
