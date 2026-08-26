@@ -1,3 +1,30 @@
+// ===== Тёмная тема =====
+(function () {
+    var KEY = 'techstore_theme';
+    var saved = localStorage.getItem(KEY);
+    if (saved === 'dark' || (saved === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+    var toggle = document.getElementById('theme-toggle');
+    if (toggle) {
+        var updateIcon = function () {
+            toggle.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+        };
+        toggle.addEventListener('click', function () {
+            var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem(KEY, 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem(KEY, 'dark');
+            }
+            updateIcon();
+        });
+        updateIcon();
+    }
+})();
+
 // Анимация появления при скролле
 (function () {
     var els = document.querySelectorAll('.reveal');
@@ -15,6 +42,20 @@
     }, { threshold: 0.08 });
     els.forEach(function (el) { io.observe(el); });
 })();
+
+// ===== Тост-уведомления =====
+function showToast(message, icon) {
+    var container = document.getElementById('toast-container');
+    if (!container) return;
+    var toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = (icon ? '<span>' + icon + '</span>' : '') + '<span>' + message + '</span>';
+    container.appendChild(toast);
+    setTimeout(function () {
+        toast.classList.add('leaving');
+        setTimeout(function () { toast.remove(); }, 300);
+    }, 2200);
+}
 
 // ===== AJAX добавление в корзину (без перезагрузки) =====
 (function () {
@@ -49,6 +90,7 @@
         }).then(function (r) { return r.json(); }).then(function (res) {
             if (res.ok) {
                 updateBadge(res.cart_count);
+                showToast('🛒 Товар добавлен в корзину');
                 if (feedbackEl) {
                     feedbackEl.textContent = '✓';
                     feedbackEl.classList.add('added');
@@ -97,6 +139,60 @@
             });
         }
     }
+})();
+
+// ===== AJAX избранное =====
+(function () {
+    var wishBadge = document.querySelector('.wish-badge');
+
+    function updateWishBadge(count) {
+        if (!wishBadge) {
+            var link = document.querySelector('.nav-link[href$="/wishlist"]');
+            if (link) {
+                wishBadge = document.createElement('span');
+                wishBadge.className = 'cart-badge wish-badge';
+                link.appendChild(wishBadge);
+            }
+        }
+        if (wishBadge) {
+            if (count > 0) {
+                wishBadge.textContent = count;
+                wishBadge.style.display = 'inline-flex';
+            } else {
+                wishBadge.style.display = 'none';
+            }
+        }
+    }
+
+    document.querySelectorAll('.wish-form').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var btn = form.querySelector('.wish-btn');
+            var data = new FormData(form);
+            data.append('csrf_token', form.querySelector('[name=csrf_token]').value);
+            fetch(form.action, {
+                method: 'POST',
+                body: data,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(function (r) { return r.json(); }).then(function (res) {
+                if (res.ok) {
+                    updateWishBadge(res.wish_count);
+                    if (res.added) {
+                        btn.classList.add('active');
+                        btn.textContent = '♥';
+                    } else {
+                        btn.classList.remove('active');
+                        btn.textContent = '♡';
+                        // на странице избранного — удалить карточку
+                        var card = form.closest('.card');
+                        if (card && card.classList.contains('wish-page')) {
+                            card.remove();
+                        }
+                    }
+                }
+            }).catch(function () {});
+        });
+    });
 })();
 
 // Управление количеством (+/−): НЕ отправляет форму на странице товара,
