@@ -104,13 +104,12 @@
                 </div>
                 <div class="field">
                     <label for="review_rating">{{ t('your_rating') }}</label>
-                    <select id="review_rating" name="review_rating" class="input">
-                        <option value="5">5 ★</option>
-                        <option value="4">4 ★</option>
-                        <option value="3">3 ★</option>
-                        <option value="2">2 ★</option>
-                        <option value="1">1 ★</option>
-                    </select>
+                    <div class="star-rating" id="star-rating">
+                        <input type="hidden" id="review_rating" name="review_rating" value="5">
+                        {% for i in range(5, 0, -1) %}
+                        <button type="button" class="star-btn{% if i == 5 %} active{% endif %}" data-value="{{ i }}" aria-label="{{ i }} star">★</button>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
             <div class="field">
@@ -159,6 +158,19 @@ document.querySelectorAll('.gallery-thumbs .thumb').forEach(function (t) {
         mainImg.src = t.dataset.src;
         document.querySelectorAll('.gallery-thumbs .thumb').forEach(function (x) { x.classList.remove('active'); });
         t.classList.add('active');
+    });
+});
+
+// Звёздный рейтинг в форме отзыва
+var ratingInput = document.getElementById('review_rating');
+var stars = document.querySelectorAll('.star-rating .star-btn');
+stars.forEach(function (star) {
+    star.addEventListener('click', function () {
+        var val = parseInt(star.dataset.value, 10);
+        ratingInput.value = val;
+        stars.forEach(function (s) {
+            s.classList.toggle('active', parseInt(s.dataset.value, 10) <= val);
+        });
     });
 });
 </script>
