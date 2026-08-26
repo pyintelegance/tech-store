@@ -29,6 +29,13 @@
             </div>
         </div>
         <div class="stat-card">
+            <div class="stat-card-icon teal">🧾</div>
+            <div class="stat-card-body">
+                <div class="stat-card-value">{{ summary.avg_check|money }}</div>
+                <div class="stat-card-label">{{ t('avg_check') }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
             <div class="stat-card-icon purple">🏷️</div>
             <div class="stat-card-body">
                 <div class="stat-card-value">{{ summary.products_count }}</div>
@@ -54,6 +61,23 @@
                 <div class="bar-col" title="{{ s.day }}: {{ s.total|money }} UZS">
                     <div class="bar" style="height: {{ (s.total / maxv * 100)|round|int if maxv else 0 }}%"></div>
                     <span class="bar-label">{{ s.day[8:10] }}.{{ s.day[5:7] }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="muted">{{ t('empty_catalog_hint') }}</p>
+            {% endif %}
+        </div>
+
+        <div class="panel dash-panel">
+            <h3 class="panel-title">{{ t('sales_monthly') }}</h3>
+            {% if sales_months %}
+            <div class="bar-chart" id="month-chart">
+                {% set maxm = sales_months|map(attribute='total')|max %}
+                {% for m in sales_months %}
+                <div class="bar-col" title="{{ m.month }}: {{ m.total|money }} UZS">
+                    <div class="bar bar-month" style="height: {{ (m.total / maxm * 100)|round|int if maxm else 0 }}%"></div>
+                    <span class="bar-label">{{ m.month }}</span>
                 </div>
                 {% endfor %}
             </div>
