@@ -6,7 +6,7 @@
         <h2 class="admin-title">{{ t('edit') if product else t('add_product') }}</h2>
         <a href="{{ url_for('admin_products') }}" class="btn btn-sm">← {{ t('back') }}</a>
     </div>
-    <form method="post" class="admin-form">
+    <form method="post" class="admin-form" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         <div class="form-grid">
             <div class="field">
@@ -34,16 +34,31 @@
                 {{ form.stock(class="input") }}
             </div>
             <div class="field">
-                <label>{{ t('image') }} *</label>
-                {{ form.image(class="input", placeholder="iphone15pro.png") }}
-            </div>
-            <div class="field">
                 <label>{{ t('rating') }}</label>
                 {{ form.rating(class="input") }}
             </div>
             <div class="field">
                 <label>{{ t('reviews_count') }}</label>
                 {{ form.reviews(class="input") }}
+            </div>
+            <div class="field field-full">
+                <label>{{ t('image') }}</label>
+                <div class="img-upload-row">
+                    <div class="img-preview">
+                        {% if product %}
+                        <img src="{{ url_for('static', filename='img/' + product.image) }}" alt="" id="img-preview">
+                        {% else %}
+                        <img src="" alt="" id="img-preview" style="display:none">
+                        {% endif %}
+                    </div>
+                    <div class="img-upload-fields">
+                        {{ form.image_file(class="input-file", id="image_file", accept="image/*") }}
+                        {% if product %}
+                        <div class="muted small">Текущее фото: {{ product.image }} — оставьте поле пустым, чтобы не менять</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {{ form.image(type="hidden") }}
             </div>
             <div class="field field-full">
                 <label>{{ t('description') }} RU *</label>
