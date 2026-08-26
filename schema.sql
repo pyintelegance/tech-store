@@ -55,6 +55,7 @@ CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
     customer_name VARCHAR(200) NOT NULL,
     phone VARCHAR(50) NOT NULL,
+    email VARCHAR(200),
     city VARCHAR(100) NOT NULL,
     address VARCHAR(500) NOT NULL,
     address2 VARCHAR(500),
