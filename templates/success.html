@@ -8,6 +8,9 @@
         <p>{{ t('order_success_text') }}</p>
         <div class="success-box">
             <div class="success-row"><span>📋 {{ t('order_number') }}</span><strong>#{{ order_id }}</strong></div>
+            {% if discount and discount != '0' %}
+            <div class="success-row"><span>🎟️ {{ coupon_code }}</span><strong>−{{ discount|money }} UZS</strong></div>
+            {% endif %}
             <div class="success-row"><span>🚚 {{ t('delivery') }}</span><strong>{{ delivery_price|money }} UZS · {{ delivery_minutes }} {{ t('minutes') }}</strong></div>
             <div class="success-row total-row"><span>{{ t('total') }}</span><strong>{{ total|money }} UZS</strong></div>
         </div>
