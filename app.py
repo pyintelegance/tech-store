@@ -17,7 +17,7 @@ from decimal import Decimal, InvalidOperation
 
 from flask import (Flask, render_template, request, redirect, url_for,
                    session, abort, flash, jsonify)
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 import config
@@ -25,7 +25,7 @@ import database as db
 import repository as repo
 from database import get_conn
 from forms import (csrf, CheckoutForm, LoginForm, ProductForm,
-                   CategoryForm, CityForm, CouponForm)
+                   CategoryForm, CityForm, CouponForm, AdminForm, AdminEditForm)
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = config.SECRET_KEY
@@ -220,6 +220,24 @@ TRANSLATIONS = {
         "add_coupon": "Добавить промокод",
         "specs_label": "Характеристики (каждая строка: Ключ: значение)",
         "gallery_label": "Дополнительные фото (несколько)",
+        "no_permission": "Недостаточно прав для этого раздела",
+        "admins_title": "Администраторы",
+        "add_admin": "Добавить администратора",
+        "edit_admin": "Редактировать администратора",
+        "role": "Роль",
+        "role_superadmin": "Генеральный",
+        "role_manager": "Менеджер",
+        "permissions_label": "Права доступа",
+        "all_permissions": "Все права (генеральный)",
+        "admin_exists": "Администратор с таким логином уже существует",
+        "admin_saved": "Администратор сохранён",
+        "admin_deleted": "Администратор удалён",
+        "admin_cannot_delete_self": "Нельзя удалить самого себя",
+        "created": "Создан",
+        "select_permissions": "Отметьте разделы, к которым дать доступ",
+        "login_admin": "Логин",
+        "optional_field": "необязательно",
+        "password_keep": "Оставьте пустым, чтобы не менять",
     },
     "uz": {
         "brand": "TechStore",
@@ -407,6 +425,24 @@ TRANSLATIONS = {
         "add_coupon": "Promokod qo'shish",
         "specs_label": "Xususiyatlar (har qator: Kalit: qiymat)",
         "gallery_label": "Qo'shimcha rasmlar (bir nechta)",
+        "no_permission": "Ushbu bo'lim uchun huquqlar yetarli emas",
+        "admins_title": "Administratorlar",
+        "add_admin": "Administrator qo'shish",
+        "edit_admin": "Administratorni tahrirlash",
+        "role": "Rol",
+        "role_superadmin": "Bosh administrator",
+        "role_manager": "Menejer",
+        "permissions_label": "Kirish huquqlari",
+        "all_permissions": "Barcha huquqlar (bosh administrator)",
+        "admin_exists": "Bunday loginli administrator allaqachon mavjud",
+        "admin_saved": "Administrator saqlandi",
+        "admin_deleted": "Administrator o'chirildi",
+        "admin_cannot_delete_self": "O'zingizni o'chirib bo'lmaydi",
+        "created": "Yaratilgan",
+        "select_permissions": "Kirish beriladigan bo'limlarni belgilang",
+        "login_admin": "Login",
+        "optional_field": "ixtiyoriy",
+        "password_keep": "O'zgartirmaslik uchun bo'sh qoldiring",
     },
 }
 
@@ -458,19 +494,65 @@ def admin_required(view):
     return wrapped
 
 
+PERMISSIONS = [
+    ("orders", "📦 " + "Заказы"),
+    ("products", "🏷️ " + "Товары"),
+    ("categories", "🗂️ " + "Категории"),
+    ("cities", "🚚 " + "Доставка"),
+    ("reviews", "⭐ " + "Отзывы"),
+    ("coupons", "🎟️ " + "Промокоды"),
+    ("dashboard", "📊 " + "Аналитика"),
+    ("admins", "👥 " + "Администраторы"),
+]
+
+PERMISSION_KEYS = [p[0] for p in PERMISSIONS]
+
+
+def permission_required(permission):
+    """Доступ только для админов с нужным правом (или superadmin)."""
+    def decorator(view):
+        @functools.wraps(view)
+        def wrapped(*args, **kwargs):
+            admin = session.get("admin")
+            if not admin:
+                return redirect(url_for("login"))
+            role = admin.get("role")
+            perms = admin.get("permissions", [])
+            if role != "superadmin" and permission not in perms:
+                flash(t("no_permission"), "error")
+                return redirect(url_for("admin_panel"))
+            return view(*args, **kwargs)
+        return wrapped
+    return decorator
+
+
+def current_admin():
+    """Объект текущего админа с проверкой в БД (актуальные права)."""
+    admin_id = session.get("admin_id")
+    if not admin_id:
+        return None
+    return repo.get_admin_by_id(admin_id)
+
+
 # ---------- Общие данные для шаблонов ----------
 
 @app.context_processor
 def inject_globals():
     cart_count = sum(session.get("cart", {}).values())
+    admin = session.get("admin")
     return {
         "t": t,
         "lang": get_lang(),
         "categories": repo.get_categories(),
         "cart_count": cart_count,
         "request_path": request.path,
-        "admin_logged_in": bool(session.get("admin")),
+        "admin_logged_in": bool(admin),
+        "admin_username": (admin or {}).get("username", ""),
+        "admin_role": (admin or {}).get("role", ""),
+        "admin_is_super": bool(admin and admin.get("role") == "superadmin"),
+        "admin_permissions": (admin or {}).get("permissions", []),
         "statuses": STATUSES,
+        "permissions": PERMISSIONS,
     }
 
 
@@ -748,19 +830,43 @@ def set_lang(lang):
 
 # ---------- Админ-панель ----------
 
+def first_allowed_section(role, perms):
+    """Первый раздел админки, доступный пользователю."""
+    order = ["orders", "products", "reviews", "coupons", "categories", "cities", "dashboard"]
+    for key in order:
+        if role == "superadmin" or key in perms:
+            return {
+                "orders": "admin_orders",
+                "products": "admin_products",
+                "reviews": "admin_reviews",
+                "coupons": "admin_coupons",
+                "categories": "admin_categories",
+                "cities": "admin_cities",
+                "dashboard": "admin_dashboard",
+            }[key]
+    return "admin_dashboard"
+
+
 @app.route("/admin/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        conn = get_conn()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM admins WHERE username=%s", (form.username.data.strip(),))
-        admin = cur.fetchone()
-        cur.close()
-        conn.close()
-        if admin and check_password_hash(admin[2], form.password.data):
-            session["admin"] = admin[1]
-            return redirect(url_for("admin_orders"))
+        admin = repo.get_admin_by_username(form.username.data.strip())
+        if admin and check_password_hash(admin["password_hash"], form.password.data):
+            perms = admin.get("permissions") or []
+            if isinstance(perms, str):
+                import json as _json
+                try:
+                    perms = _json.loads(perms)
+                except Exception:
+                    perms = []
+            session["admin"] = {
+                "id": admin["id"],
+                "username": admin["username"],
+                "role": admin["role"],
+                "permissions": perms,
+            }
+            return redirect(url_for(first_allowed_section(admin["role"], perms)))
         flash(t("invalid_credentials"), "error")
     return render_template("admin/login.html", form=form)
 
@@ -768,6 +874,7 @@ def login():
 @app.route("/admin/logout")
 def logout():
     session.pop("admin", None)
+    session.pop("admin_id", None)
     flash(t("logged_out"), "ok")
     return redirect(url_for("index"))
 
@@ -775,11 +882,14 @@ def logout():
 @app.route("/admin")
 @admin_required
 def admin_panel():
-    return redirect(url_for("admin_dashboard"))
+    admin = session.get("admin")
+    return redirect(url_for(first_allowed_section(
+        admin.get("role", ""), admin.get("permissions", []))))
 
 
 @app.route("/admin/orders")
 @admin_required
+@permission_required("orders")
 def admin_orders():
     status_filter = request.args.get("status", "")
     orders = repo.get_orders(status_filter or None)
@@ -793,6 +903,7 @@ def admin_orders():
 
 @app.route("/admin/orders/<int:oid>/status", methods=["POST"])
 @admin_required
+@permission_required("orders")
 def admin_order_status(oid):
     status = request.form.get("status", "")
     if status in STATUSES:
@@ -874,6 +985,7 @@ def parse_specs_text(text):
 
 @app.route("/admin/products")
 @admin_required
+@permission_required("products")
 def admin_products():
     products = repo.get_products({"sort": "popular"})
     return render_template("admin/products.html", products=products)
@@ -881,6 +993,7 @@ def admin_products():
 
 @app.route("/admin/products/new", methods=["GET", "POST"])
 @admin_required
+@permission_required("products")
 def admin_product_new():
     form = ProductForm()
     form.category_id.choices = [
@@ -915,6 +1028,7 @@ def admin_product_new():
 
 @app.route("/admin/products/<int:pid>/edit", methods=["GET", "POST"])
 @admin_required
+@permission_required("products")
 def admin_product_edit(pid):
     p = repo.get_product(pid)
     if not p:
@@ -969,6 +1083,7 @@ def admin_product_edit(pid):
 
 @app.route("/admin/products/<int:pid>/delete", methods=["POST"])
 @admin_required
+@permission_required("products")
 def admin_product_delete(pid):
     repo.delete_product(pid)
     flash(t("product_deleted"), "ok")
@@ -979,6 +1094,7 @@ def admin_product_delete(pid):
 
 @app.route("/admin/dashboard")
 @admin_required
+@permission_required("dashboard")
 def admin_dashboard():
     summary = repo.analytics_summary()
     by_status = repo.analytics_orders_by_status()
@@ -1000,26 +1116,15 @@ def admin_dashboard():
 
 @app.route("/admin/reviews")
 @admin_required
+@permission_required("reviews")
 def admin_reviews():
-    status = request.args.get("status", "")
-    reviews = repo.get_all_reviews(status or None)
-    return render_template("admin/reviews.html", reviews=reviews,
-                           status_filter=status)
-
-
-@app.route("/admin/reviews/<int:rid>/approve", methods=["POST"])
-@admin_required
-def admin_review_approve(rid):
-    review = db.fetch_one("SELECT * FROM reviews WHERE id=%s", (rid,))
-    if review:
-        repo.approve_review(rid, True)
-        repo.recalc_product_rating(review["product_id"])
-        flash(t("review_approved"), "ok")
-    return redirect(url_for("admin_reviews"))
+    reviews = repo.get_all_reviews()
+    return render_template("admin/reviews.html", reviews=reviews)
 
 
 @app.route("/admin/reviews/<int:rid>/delete", methods=["POST"])
 @admin_required
+@permission_required("reviews")
 def admin_review_delete(rid):
     review = db.fetch_one("SELECT * FROM reviews WHERE id=%s", (rid,))
     if review:
@@ -1033,6 +1138,7 @@ def admin_review_delete(rid):
 
 @app.route("/admin/coupons", methods=["GET", "POST"])
 @admin_required
+@permission_required("coupons")
 def admin_coupons():
     form = CouponForm()
     if form.validate_on_submit():
@@ -1045,6 +1151,7 @@ def admin_coupons():
 
 @app.route("/admin/coupons/<int:cid>/toggle", methods=["POST"])
 @admin_required
+@permission_required("coupons")
 def admin_coupon_toggle(cid):
     coupon = db.fetch_one("SELECT * FROM coupons WHERE id=%s", (cid,))
     if coupon:
@@ -1056,16 +1163,125 @@ def admin_coupon_toggle(cid):
 
 @app.route("/admin/coupons/<int:cid>/delete", methods=["POST"])
 @admin_required
+@permission_required("coupons")
 def admin_coupon_delete(cid):
     repo.delete_coupon(cid)
     flash(t("coupon_deleted"), "ok")
     return redirect(url_for("admin_coupons"))
 
 
+# --- Администраторы (только генеральный) ---
+
+def superadmin_required(view):
+    @functools.wraps(view)
+    def wrapped(*args, **kwargs):
+        admin = session.get("admin")
+        if not admin:
+            return redirect(url_for("login"))
+        if admin.get("role") != "superadmin":
+            flash(t("no_permission"), "error")
+            return redirect(url_for("admin_dashboard"))
+        return view(*args, **kwargs)
+    return wrapped
+
+
+def parse_permissions(form):
+    """Собирает список прав из чекбоксов формы."""
+    keys = []
+    for key in PERMISSION_KEYS:
+        if form.get(key):
+            keys.append(key)
+    return keys
+
+
+@app.route("/admin/admins")
+@admin_required
+@superadmin_required
+def admin_admins():
+    admins = repo.get_admins()
+    return render_template("admin/admins.html", admins=admins,
+                           permissions=PERMISSIONS)
+
+
+@app.route("/admin/admins/new", methods=["GET", "POST"])
+@admin_required
+@superadmin_required
+def admin_admin_new():
+    form = AdminForm()
+    if form.validate_on_submit():
+        username = form.username.data.strip()
+        if repo.get_admin_by_username(username):
+            flash(t("admin_exists"), "error")
+            return render_template("admin/admin_form.html", form=form,
+                                   permissions=PERMISSIONS, edit=False)
+        perms = parse_permissions(request.form)
+        repo.create_admin(
+            username=username,
+            password_hash=generate_password_hash(form.password.data),
+            role=form.role.data,
+            permissions=perms,
+        )
+        flash(t("admin_saved"), "ok")
+        return redirect(url_for("admin_admins"))
+    return render_template("admin/admin_form.html", form=form,
+                           permissions=PERMISSIONS, edit=False)
+
+
+@app.route("/admin/admins/<int:aid>/edit", methods=["GET", "POST"])
+@admin_required
+@superadmin_required
+def admin_admin_edit(aid):
+    target = repo.get_admin_by_id(aid)
+    if not target:
+        abort(404)
+    form = AdminEditForm()
+    if form.validate_on_submit():
+        username = form.username.data.strip()
+        existing = repo.get_admin_by_username(username)
+        if existing and existing["id"] != aid:
+            flash(t("admin_exists"), "error")
+            return render_template("admin/admin_form.html", form=form,
+                                   permissions=PERMISSIONS, edit=True, admin=target)
+        perms = parse_permissions(request.form)
+        kwargs = {"username": username, "role": form.role.data, "permissions": perms}
+        if form.password.data:
+            kwargs["password_hash"] = generate_password_hash(form.password.data)
+        repo.update_admin(aid, username, **kwargs)
+        flash(t("admin_saved"), "ok")
+        return redirect(url_for("admin_admins"))
+    if not form.is_submitted():
+        form.username.data = target["username"]
+        form.role.data = target["role"]
+        perms = target.get("permissions") or []
+        if isinstance(perms, str):
+            import json as _json
+            try:
+                perms = _json.loads(perms)
+            except Exception:
+                perms = []
+        form.permissions.data = ",".join(perms)
+    return render_template("admin/admin_form.html", form=form,
+                           permissions=PERMISSIONS, edit=True, admin=target)
+
+
+@app.route("/admin/admins/<int:aid>/delete", methods=["POST"])
+@admin_required
+@superadmin_required
+def admin_admin_delete(aid):
+    current = session.get("admin", {})
+    if current.get("id") == aid:
+        flash(t("admin_cannot_delete_self"), "error")
+        return redirect(url_for("admin_admins"))
+    repo.delete_admin(aid)
+    flash(t("admin_deleted"), "ok")
+    return redirect(url_for("admin_admins"))
+
+
 # --- Категории ---
 
 @app.route("/admin/categories", methods=["GET", "POST"])
 @admin_required
+@permission_required("categories")
 def admin_categories():
     form = CategoryForm()
     if form.validate_on_submit():
@@ -1082,6 +1298,7 @@ def admin_categories():
 
 @app.route("/admin/categories/<int:cid>/delete", methods=["POST"])
 @admin_required
+@permission_required("categories")
 def admin_category_delete(cid):
     repo.delete_category(cid)
     flash(t("category_deleted"), "ok")
@@ -1092,6 +1309,7 @@ def admin_category_delete(cid):
 
 @app.route("/admin/cities", methods=["GET", "POST"])
 @admin_required
+@permission_required("cities")
 def admin_cities():
     form = CityForm()
     if form.validate_on_submit():
@@ -1107,6 +1325,7 @@ def admin_cities():
 
 @app.route("/admin/cities/<int:cid>/delete", methods=["POST"])
 @admin_required
+@permission_required("cities")
 def admin_city_delete(cid):
     repo.delete_city(cid)
     flash(t("city_deleted"), "ok")
