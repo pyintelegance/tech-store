@@ -38,6 +38,12 @@
                 <label for="address2">➕ {{ t('address2') }}</label>
                 {{ form.address2(id="address2", placeholder=t('address2_ph'), class="input") }}
             </div>
+            <div class="field">
+                <label for="coupon">🎟️ {{ t('coupon') }}</label>
+                <div class="coupon-row">
+                    {{ form.coupon(id="coupon", placeholder=t('coupon_ph'), class="input") }}
+                </div>
+            </div>
         </div>
 
         <div class="panel reveal">
@@ -50,6 +56,10 @@
             {% endfor %}
             <div class="order-line">
                 <span>{{ t('items_total') }}</span><span>{{ total|money }} UZS</span>
+            </div>
+            <div class="order-line discount-line" id="discount-line" style="display:none">
+                <span>🎟️ {{ t('coupon') }} <b id="coupon-code-label"></b></span>
+                <span class="discount-value" id="discount-value">−0 UZS</span>
             </div>
             <div class="order-line delivery-line">
                 <span>🚚 {{ t('delivery') }} <span class="delivery-meta" id="delivery-meta"></span></span>
@@ -76,6 +86,12 @@
     var metaEl = document.getElementById('delivery-meta');
     var grandEl = document.getElementById('grand-total');
     var minsLabel = "{{ t('minutes') }}";
+    var discount = 0;
+    var discountLine = document.getElementById('discount-line');
+    var discountValue = document.getElementById('discount-value');
+    var couponCodeLabel = document.getElementById('coupon-code-label');
+    var couponInput = document.getElementById('coupon');
+    var couponApplied = false;
 
     function fmt(v) {
         return Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -83,19 +99,54 @@
 
     function update() {
         var opt = citySel.options[citySel.selectedIndex];
+        var dprice = 0, dmins = 0;
         if (opt && opt.dataset.price !== undefined) {
-            var dprice = parseFloat(opt.dataset.price);
-            var dmins = opt.dataset.mins;
+            dprice = parseFloat(opt.dataset.price);
+            dmins = opt.dataset.mins;
             priceEl.textContent = fmt(dprice) + " UZS";
             metaEl.textContent = "≈ " + dmins + " " + minsLabel;
-            grandEl.textContent = fmt(total + dprice) + " UZS";
         } else {
             priceEl.textContent = "—";
             metaEl.textContent = "";
-            grandEl.textContent = fmt(total) + " UZS";
         }
+        var grand = total - discount + dprice;
+        grandEl.textContent = fmt(grand) + " UZS";
     }
+
     citySel.addEventListener('change', update);
+
+    if (couponInput) {
+        couponInput.addEventListener('change', function () {
+            var code = couponInput.value.trim();
+            if (!code) return;
+            var data = new FormData();
+            data.append('code', code);
+            data.append('csrf_token', "{{ csrf_token() }}");
+            fetch("{{ url_for('coupon_check') }}", {
+                method: 'POST',
+                body: data,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(function (r) { return r.json(); }).then(function (res) {
+                if (res.ok) {
+                    discount = res.discount;
+                    couponApplied = true;
+                    discountLine.style.display = 'flex';
+                    discountValue.textContent = '−' + fmt(discount) + ' UZS';
+                    couponCodeLabel.textContent = res.code;
+                    couponInput.style.borderColor = '#16a34a';
+                    update();
+                } else {
+                    discount = 0;
+                    couponApplied = false;
+                    discountLine.style.display = 'none';
+                    couponInput.style.borderColor = '#dc2626';
+                    update();
+                }
+            });
+        });
+    }
+
+    update();
 })();
 </script>
 {% endblock %}
