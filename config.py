@@ -27,10 +27,14 @@ SMTP_FROM = os.environ.get("SMTP_FROM", "")
 
 
 def dsn():
-    return {
+    d = {
         "dbname": DB_NAME,
         "user": DB_USER,
         "password": DB_PASSWORD,
         "host": DB_HOST,
         "port": DB_PORT,
     }
+    # Облачные БД (Neon/Render) требуют SSL
+    if DB_HOST != "localhost" and DB_HOST != "127.0.0.1":
+        d["sslmode"] = "require"
+    return d
