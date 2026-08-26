@@ -72,3 +72,19 @@ class CouponForm(FlaskForm):
     code = StringField("code", validators=[DataRequired(), Length(max=50)])
     discount_percent = IntegerField("discount_percent", validators=[DataRequired(), NumberRange(min=1, max=100)])
     submit = SubmitField("save")
+
+
+class AdminForm(FlaskForm):
+    username = StringField("username", validators=[DataRequired(), Length(max=100)])
+    password = PasswordField("password", validators=[DataRequired(), Length(min=4, max=200)])
+    role = SelectField("role", choices=[("manager", "Менеджер"), ("superadmin", "Генеральный")])
+    permissions = StringField("permissions", validators=[Optional()])
+    submit = SubmitField("save")
+
+
+class AdminEditForm(FlaskForm):
+    username = StringField("username", validators=[DataRequired(), Length(max=100)])
+    password = PasswordField("password", validators=[Optional(), Length(min=4, max=200)])
+    role = SelectField("role", choices=[("manager", "Менеджер"), ("superadmin", "Генеральный")])
+    permissions = StringField("permissions", validators=[Optional()])
+    submit = SubmitField("save")
