@@ -2,29 +2,55 @@
 {% block title %}{{ t('catalog') }} — {{ t('brand') }}{% endblock %}
 {% block content %}
 <section class="hero">
-    <div class="container">
-        <h1 class="hero-title">{{ t('brand') }}</h1>
-        <p class="hero-sub">{{ t('tagline') }}</p>
+    <div class="container hero-inner">
+        <div class="hero-text">
+            <div class="hero-badge">✨ {{ t('hero_badge') }}</div>
+            <h1 class="hero-title">{{ t('hero_title') }} <em>{{ t('hero_title_accent') }}</em></h1>
+            <p class="hero-sub">{{ t('hero_sub') }}</p>
+            <div class="hero-btns">
+                <a href="#catalog" class="hero-cta">🛍️ {{ t('hero_cta') }}</a>
+                <a href="#features" class="hero-ghost">{{ t('hero_ghost') }}</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat"><b>18+</b><span>{{ t('stat_products') }}</span></div>
+                <div class="hero-stat"><b>7</b><span>{{ t('stat_delivery') }}</span></div>
+                <div class="hero-stat"><b>500+</b><span>{{ t('stat_clients') }}</span></div>
+            </div>
+        </div>
+        <div class="hero-card">
+            <div class="hero-card-title">💎 {{ t('card_guarantee') }}</div>
+            <div class="hero-card-item"><span class="hci-icon">📱</span><span>{{ t('feature1_text') }}</span></div>
+            <div class="hero-card-item"><span class="hci-icon">🚚</span><span>{{ t('feature2_text') }}</span></div>
+            <div class="hero-card-item"><span class="hci-icon">💵</span><span>{{ t('feature3_text') }}</span></div>
+        </div>
     </div>
 </section>
 
-<div class="container">
-    <div class="toolbar">
-        <div class="cats">
-            <a href="{{ url_for('index') }}" class="cat-chip{% if not active_category %} active{% endif %}">{{ t('all') }}</a>
-            {% for c in categories %}
-            <a href="{{ url_for('index', category=c.id, q=q, sort=sort, min_price=min_price, max_price=max_price) }}"
-               class="cat-chip{% if active_category == c.id|string %} active{% endif %}">
-                <span class="cat-icon">{{ c.icon }}</span>{{ c.name_ru if lang=='ru' else c.name_uz }}
-            </a>
-            {% endfor %}
-        </div>
-        <div class="sort">
-            <select class="sort-select" onchange="location=this.value;">
-                {% for key, label in [('popular', t('sort_popular')), ('cheap', t('sort_cheap')), ('expensive', t('sort_expensive')), ('rating', t('sort_rating'))] %}
-                <option value="{{ url_for('index', category=active_category, q=q, sort=key, min_price=min_price, max_price=max_price) }}" {% if sort==key %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
+<div class="container section" id="catalog">
+    <div class="section-head reveal">
+        <h2 class="section-title">{{ t('categories') }} <span class="accent">📁</span></h2>
+    </div>
+    <div class="cat-cards">
+        {% for c in categories %}
+        <a href="{{ url_for('index', category=c.id) }}" class="cat-card reveal">
+            <div class="cat-card-icon">{{ c.icon }}</div>
+            <div class="cat-card-name">{{ c.name_ru if lang=='ru' else c.name_uz }}</div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="container section" id="all">
+    <div class="section-head reveal">
+        <h2 class="section-title">{{ t('all_title') }}</h2>
+        <div class="toolbar-side">
+            <div class="sort">
+                <select class="sort-select" onchange="location=this.value;">
+                    {% for key, label in [('popular', t('sort_popular')), ('cheap', t('sort_cheap')), ('expensive', t('sort_expensive')), ('rating', t('sort_rating'))] %}
+                    <option value="{{ url_for('index', category=active_category, q=q, sort=key, min_price=min_price, max_price=max_price) }}" {% if sort==key %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
     </div>
 
@@ -44,7 +70,7 @@
     {% if products %}
     <div class="grid">
         {% for p in products %}
-        <div class="card">
+        <div class="card reveal">
             <a href="{{ url_for('product', pid=p.id) }}" class="card-img-wrap">
                 <img src="{{ p.image|product_img }}"
                      alt="{{ p['name_ru'] if lang=='ru' else p['name_uz'] }}" class="card-img">
@@ -83,4 +109,19 @@
     </div>
     {% endif %}
 </div>
+
+<section class="features" id="features">
+    <div class="container">
+        <div class="section-head reveal">
+            <h2 class="section-title">{{ t('features_title') }}</h2>
+            <span class="section-more">{{ t('features_sub') }}</span>
+        </div>
+        <div class="features-grid">
+            <div class="feature reveal"><div class="feature-icon">✅</div><div class="feature-title">{{ t('feature1_title') }}</div><div class="feature-text">{{ t('feature1_text') }}</div></div>
+            <div class="feature reveal"><div class="feature-icon">🚚</div><div class="feature-title">{{ t('feature2_title') }}</div><div class="feature-text">{{ t('feature2_text') }}</div></div>
+            <div class="feature reveal"><div class="feature-icon">💵</div><div class="feature-title">{{ t('feature3_title') }}</div><div class="feature-text">{{ t('feature3_text') }}</div></div>
+            <div class="feature reveal"><div class="feature-icon">🎧</div><div class="feature-title">{{ t('feature4_title') }}</div><div class="feature-text">{{ t('feature4_text') }}</div></div>
+        </div>
+    </div>
+</section>
 {% endblock %}
