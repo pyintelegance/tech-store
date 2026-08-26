@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block title %}{{ p['name_ru'] if lang=='ru' else p['name_uz'] }} — {{ t('brand') }}{% endblock %}
 {% block content %}
 <div class="container">
@@ -8,7 +8,7 @@
 
     <div class="product-page">
         <div class="product-gallery">
-            <img src="{{ url_for('static', filename='img/' + p.image) }}" alt="{{ p['name_ru'] if lang=='ru' else p['name_uz'] }}" class="product-img">
+            <img src="{{ p.image|product_img }}" alt="{{ p['name_ru'] if lang=='ru' else p['name_uz'] }}" class="product-img">
         </div>
         <div class="product-info">
             <h1 class="product-title">{{ p['name_ru'] if lang=='ru' else p['name_uz'] }}</h1>
@@ -50,7 +50,7 @@
         {% for r in related %}
         <div class="card">
             <a href="{{ url_for('product', pid=r.id) }}" class="card-img-wrap">
-                <img src="{{ url_for('static', filename='img/' + r.image) }}" alt="{{ r['name_ru'] if lang=='ru' else r['name_uz'] }}" class="card-img">
+                <img src="{{ r.image|product_img }}" alt="{{ r['name_ru'] if lang=='ru' else r['name_uz'] }}" class="card-img">
             </a>
             <div class="card-body">
                 <a href="{{ url_for('product', pid=r.id) }}" class="card-title">{{ r['name_ru'] if lang=='ru' else r['name_uz'] }}</a>
