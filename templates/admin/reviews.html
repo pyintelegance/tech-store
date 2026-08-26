@@ -1,0 +1,48 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ t('reviews') }}{% endblock %}
+{% block content %}
+<div class="admin-content">
+    <div class="admin-head">
+        <h2 class="admin-title">⭐ {{ t('reviews') }}</h2>
+        <div class="status-tabs">
+            <a href="{{ url_for('admin_reviews') }}" class="status-tab{% if not status_filter %} active{% endif %}">{{ t('all') }}</a>
+            <a href="{{ url_for('admin_reviews', status='pending') }}" class="status-tab{% if status_filter=='pending' %} active{% endif %}">⏳ Ожидают</a>
+        </div>
+    </div>
+
+    {% if reviews %}
+    <div class="admin-cards">
+        {% for r in reviews %}
+        <div class="admin-order">
+            <div class="admin-order-head">
+                <strong>⭐ {{ r.rating }}/5</strong>
+                <span class="status-pill {% if r.approved %}status-delivered{% else %}status-new{% endif %}">
+                    {% if r.approved %}✔ {{ t('active') }}{% else %}⏳ {{ t('disabled') }}{% endif %}
+                </span>
+            </div>
+            <div class="admin-order-body">
+                <div class="admin-order-row"><span>{{ t('product') }}</span><span>{{ r.product_ru }}</span></div>
+                <div class="admin-order-row"><span>{{ t('customer') }}</span><span>{{ r.customer_name }}</span></div>
+                <div class="admin-order-row"><span>{{ t('date') }}</span><span>{{ r.created_at.strftime('%d.%m.%Y') }}</span></div>
+                <div class="review-text">{{ r.text }}</div>
+            </div>
+            <div class="table-actions" style="margin-top:10px">
+                {% if not r.approved %}
+                <form method="post" action="{{ url_for('admin_review_approve', rid=r.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-primary">✔ {{ t('review_approved') }}</button>
+                </form>
+                {% endif %}
+                <form method="post" action="{{ url_for('admin_review_delete', rid=r.id) }}" onsubmit="return confirm('{{ t('confirm_delete') }}')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-danger">{{ t('delete') }}</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty"><div class="empty-icon">⭐</div><h3>—</h3></div>
+    {% endif %}
+</div>
+{% endblock %}
