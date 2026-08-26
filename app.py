@@ -138,6 +138,7 @@ TRANSLATIONS = {
         "city_required": "Выберите город",
         "address_required": "Укажите адрес",
         "address_length": "Адрес слишком короткий",
+        "email_invalid": "Некорректный email",
         "delivery_price_label": "Цена доставки",
         "delivery_minutes_label": "Время доставки (мин)",
         "city_name": "Город",
@@ -238,6 +239,30 @@ TRANSLATIONS = {
         "login_admin": "Логин",
         "optional_field": "необязательно",
         "password_keep": "Оставьте пустым, чтобы не менять",
+        "wishlist": "Избранное",
+        "wishlist_title": "Избранное",
+        "wishlist_empty": "В избранном пока пусто",
+        "wishlist_empty_hint": "Нажмите на сердечко у товара, чтобы сохранить его",
+        "add_wish": "В избранное",
+        "remove_wish": "Убрать",
+        "wish_added": "Добавлено в избранное",
+        "wish_removed": "Убрано из избранного",
+        "track": "Отследить заказ",
+        "track_title": "Отслеживание заказа",
+        "track_hint": "Введите номер заказа, чтобы узнать его статус",
+        "track_ph": "Например: 123",
+        "track_btn": "Найти заказ",
+        "track_invalid": "Введите номер заказа (цифры)",
+        "track_not_found": "Заказ с таким номером не найден",
+        "track_order_title": "Заказ #",
+        "order_details": "Детали заказа",
+        "order_placed": "Заказ оформлен",
+        "order_processing": "В обработке",
+        "order_delivered": "Доставлен",
+        "order_cancelled": "Отменён",
+        "avg_check": "Средний чек",
+        "sales_monthly": "Продажи по месяцам",
+        "export_orders": "Экспорт заказов (CSV)",
     },
     "uz": {
         "brand": "TechStore",
@@ -343,6 +368,7 @@ TRANSLATIONS = {
         "city_required": "Shaharni tanlang",
         "address_required": "Manzilni kiriting",
         "address_length": "Manzil juda qisqa",
+        "email_invalid": "Email noto'g'ri",
         "delivery_price_label": "Yetkazib berish narxi",
         "delivery_minutes_label": "Yetkazib berish vaqti (daq)",
         "city_name": "Shahar",
@@ -443,6 +469,30 @@ TRANSLATIONS = {
         "login_admin": "Login",
         "optional_field": "ixtiyoriy",
         "password_keep": "O'zgartirmaslik uchun bo'sh qoldiring",
+        "wishlist": "Sevimlilar",
+        "wishlist_title": "Sevimlilar",
+        "wishlist_empty": "Sevimlilar bo'sh",
+        "wishlist_empty_hint": "Mahsulotdagi yurakchani bosing va saqlang",
+        "add_wish": "Sevimlilarga",
+        "remove_wish": "Olib tashlash",
+        "wish_added": "Sevimlilarga qo'shildi",
+        "wish_removed": "Sevimlilardan olib tashlandi",
+        "track": "Buyurtmani kuzatish",
+        "track_title": "Buyurtmani kuzatish",
+        "track_hint": "Holatini bilish uchun buyurtma raqamini kiriting",
+        "track_ph": "Masalan: 123",
+        "track_btn": "Buyurtmani topish",
+        "track_invalid": "Buyurtma raqamini kiriting (raqamlar)",
+        "track_not_found": "Bunday raqamli buyurtma topilmadi",
+        "track_order_title": "Buyurtma #",
+        "order_details": "Buyurtma tafsilotlari",
+        "order_placed": "Buyurtma qabul qilindi",
+        "order_processing": "Jarayonda",
+        "order_delivered": "Yetkazildi",
+        "order_cancelled": "Bekor qilindi",
+        "avg_check": "O'rtacha chek",
+        "sales_monthly": "Oylik savdo",
+        "export_orders": "Buyurtmalar eksporti (CSV)",
     },
 }
 
@@ -539,12 +589,14 @@ def current_admin():
 @app.context_processor
 def inject_globals():
     cart_count = sum(session.get("cart", {}).values())
+    wish_count = len(session.get("wishlist", {}))
     admin = session.get("admin")
     return {
         "t": t,
         "lang": get_lang(),
         "categories": repo.get_categories(),
         "cart_count": cart_count,
+        "wish_count": wish_count,
         "request_path": request.path,
         "admin_logged_in": bool(admin),
         "admin_username": (admin or {}).get("username", ""),
@@ -589,14 +641,16 @@ def index():
     sort = request.args.get("sort", "popular")
     min_price = request.args.get("min_price", "").strip()
     max_price = request.args.get("max_price", "").strip()
+    page = request.args.get("page", 1, type=int)
 
-    filters = {"q": q, "category": category, "sort": sort}
+    filters = {"q": q, "category": category, "sort": sort, "page": page, "per_page": 12}
     if min_price:
         filters["min_price"] = min_price
     if max_price:
         filters["max_price"] = max_price
 
-    products = repo.get_products(filters)
+    products, total, page, per_page = repo.get_products(filters)
+    total_pages = max(1, (total + per_page - 1) // per_page)
     return render_template(
         "index.html",
         products=products,
@@ -605,6 +659,9 @@ def index():
         sort=sort,
         min_price=min_price,
         max_price=max_price,
+        page=page,
+        total_pages=total_pages,
+        total=total,
     )
 
 
@@ -642,6 +699,36 @@ def product(pid):
 def cart():
     items, total = cart_items_data()
     return render_template("cart.html", items=items, total=total)
+
+
+# ---------- Избранное ----------
+
+@app.route("/wishlist")
+def wishlist():
+    wish = session.get("wishlist", {})
+    products = []
+    if wish:
+        ids = [int(i) for i in wish.keys()]
+        products = repo.get_products_by_ids(ids)
+    return render_template("wishlist.html", products=products)
+
+
+@app.route("/wishlist/toggle", methods=["POST"])
+def wishlist_toggle():
+    pid = str(request.form.get("product_id", ""))
+    if not pid.isdigit():
+        abort(400)
+    wish = session.get("wishlist", {})
+    if pid in wish:
+        wish.pop(pid)
+        added = False
+    else:
+        wish[pid] = True
+        added = True
+    session["wishlist"] = wish
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"ok": True, "added": added, "wish_count": len(wish)})
+    return redirect(request.referrer or url_for("wishlist"))
 
 
 @app.route("/cart/add", methods=["POST"])
@@ -696,8 +783,9 @@ def send_telegram_notification(order):
         message = (
             f"🛒 <b>НОВЫЙ ЗАКАЗ #{order['id']}</b>\n\n"
             f"👤 {order['customer_name']}\n"
-            f"📞 {order['phone']}\n"
-            f"🏙 {order['city']}\n"
+            f"📞 {order['phone']}"
+            + (f"\n📧 {order['email']}" if order.get("email") else "")
+            + f"\n🏙 {order['city']}\n"
             f"📍 {order['address']}"
             + (f"\n➕ {order['address2']}" if order.get("address2") else "")
             + f"\n\n{items_text}"
@@ -711,6 +799,41 @@ def send_telegram_notification(order):
                   "parse_mode": "HTML"},
             timeout=15,
         )
+        return True
+    except Exception:
+        return False
+
+
+def send_order_email(order):
+    """Отправляет подтверждение заказа на email клиента (если настроен SMTP)."""
+    email = order.get("email")
+    if not email or not config.SMTP_HOST:
+        return False
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.header import Header
+        items_text = "\n".join(
+            f"- {it['product_name']} x {it['quantity']} = {money(it['price'] * it['quantity'])} UZS"
+            for it in repo.get_order_items(order["id"])
+        )
+        body = (
+            f"Спасибо за заказ #{order['id']} в TechStore!\n\n"
+            f"Состав заказа:\n{items_text}\n"
+            + (f"Промокод {order['coupon_code']}: -{money(order['discount'])} UZS\n" if order.get("discount") else "")
+            + f"\nДоставка: {money(order['delivery_price'])} UZS ({order['delivery_minutes']} мин)\n"
+            + f"ИТОГО: {money(order['total'])} UZS\n\n"
+            + "Оплата при получении. Мы свяжемся с вами по телефону.\n"
+            + f"Отследить заказ: {request.host_url}track/{order['id']}"
+        )
+        msg = MIMEText(body, "plain", "utf-8")
+        msg["Subject"] = Header(f"Ваш заказ #{order['id']} в TechStore", "utf-8")
+        msg["From"] = config.SMTP_FROM
+        msg["To"] = email
+        with smtplib.SMTP(config.SMTP_HOST, int(config.SMTP_PORT or 587), timeout=20) as server:
+            server.starttls()
+            server.login(config.SMTP_USER, config.SMTP_PASSWORD)
+            server.sendmail(config.SMTP_FROM, [email], msg.as_string())
         return True
     except Exception:
         return False
@@ -757,6 +880,7 @@ def checkout():
         order_id = repo.create_order_full(
             customer_name=form.name.data.strip(),
             phone=form.phone.data.strip(),
+            email=(form.email.data or "").strip() or None,
             city=city_name,
             address=form.address.data.strip(),
             address2=form.address2.data.strip() or None,
@@ -772,6 +896,7 @@ def checkout():
         order = repo.get_order(order_id)
         if order:
             send_telegram_notification(order)
+            send_order_email(order)
         session["cart"] = {}
         return redirect(url_for("order_success", order_id=order_id,
                                 total=grand_total,
@@ -819,6 +944,29 @@ def order_success():
         delivery_price=delivery_price, delivery_minutes=delivery_minutes,
         discount=discount, coupon_code=coupon_code,
     )
+
+
+# ---------- Отслеживание заказа ----------
+
+@app.route("/track", methods=["GET", "POST"])
+def track():
+    """Поиск заказа по номеру."""
+    if request.method == "POST":
+        oid = request.form.get("order_id", "").strip()
+        if oid.isdigit():
+            return redirect(url_for("track_order", oid=int(oid)))
+        flash(t("track_invalid"), "error")
+    return render_template("track.html")
+
+
+@app.route("/track/<int:oid>")
+def track_order(oid):
+    order = repo.get_order(oid)
+    if not order:
+        flash(t("track_not_found"), "error")
+        return redirect(url_for("track"))
+    items = repo.get_order_items(oid)
+    return render_template("track_order.html", order=order, items=items)
 
 
 @app.route("/set-lang/<lang>")
@@ -912,6 +1060,34 @@ def admin_order_status(oid):
     return redirect(url_for("admin_orders"))
 
 
+@app.route("/admin/orders/export")
+@admin_required
+@permission_required("orders")
+def admin_orders_export():
+    """Экспорт заказов в CSV (для Excel/бухгалтерии)."""
+    import csv as _csv
+    import io as _io
+    orders = repo.get_orders()
+    buf = _io.StringIO()
+    writer = _csv.writer(buf)
+    writer.writerow(["ID", "Дата", "Клиент", "Телефон", "Email", "Город", "Адрес",
+                     "Доставка", "Промокод", "Скидка", "Итого", "Статус"])
+    for o in orders:
+        writer.writerow([
+            o["id"], o["created_at"].strftime("%d.%m.%Y %H:%M"),
+            o["customer_name"], o["phone"], o.get("email") or "", o["city"], o["address"],
+            o["delivery_price"], o.get("coupon_code") or "",
+            o.get("discount") or 0, o["total"], o["status"],
+        ])
+    csv_data = buf.getvalue()
+    response = app.response_class(
+        "\ufeff" + csv_data,
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=orders.csv"},
+    )
+    return response
+
+
 # --- Товары ---
 
 import requests as http_requests
@@ -987,7 +1163,7 @@ def parse_specs_text(text):
 @admin_required
 @permission_required("products")
 def admin_products():
-    products = repo.get_products({"sort": "popular"})
+    products, _, _, _ = repo.get_products({"sort": "popular", "per_page": 999})
     return render_template("admin/products.html", products=products)
 
 
@@ -1099,6 +1275,7 @@ def admin_dashboard():
     summary = repo.analytics_summary()
     by_status = repo.analytics_orders_by_status()
     sales = repo.analytics_sales_by_day(14)
+    sales_months = repo.analytics_sales_by_month(6)
     top = repo.analytics_top_products(5)
     recent = repo.analytics_recent_orders(8)
     status_map = {row["status"]: row["count"] for row in by_status}
@@ -1107,6 +1284,7 @@ def admin_dashboard():
         summary=summary,
         status_map=status_map,
         sales=sales,
+        sales_months=sales_months,
         top=top,
         recent=recent,
     )
