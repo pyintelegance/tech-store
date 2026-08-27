@@ -3,47 +3,47 @@
 {% block content %}
 <div class="admin-content">
     <div class="admin-head">
-        <h2 class="admin-title">📊 {{ t('dashboard') }}</h2>
+        <h2 class="admin-title">{{ icon('chart')|safe }} {{ t('dashboard') }}</h2>
     </div>
 
     <div class="stat-cards">
         <div class="stat-card">
-            <div class="stat-card-icon blue">📦</div>
+            <div class="stat-card-icon blue">{{ icon('box')|safe }}</div>
             <div class="stat-card-body">
                 <div class="stat-card-value">{{ summary.orders_count }}</div>
                 <div class="stat-card-label">{{ t('stat_orders') }}</div>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-card-icon green">💰</div>
+            <div class="stat-card-icon green">{{ icon('money')|safe }}</div>
             <div class="stat-card-body">
                 <div class="stat-card-value">{{ summary.revenue|money }} <span class="muted">UZS</span></div>
                 <div class="stat-card-label">{{ t('stat_revenue') }}</div>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-card-icon orange">🆕</div>
+            <div class="stat-card-icon orange">{{ icon('plus')|safe }}</div>
             <div class="stat-card-body">
                 <div class="stat-card-value">{{ summary.new_orders }}</div>
                 <div class="stat-card-label">{{ t('stat_new') }}</div>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-card-icon teal">🧾</div>
+            <div class="stat-card-icon teal">{{ icon('paper')|safe }}</div>
             <div class="stat-card-body">
                 <div class="stat-card-value">{{ summary.avg_check|money }}</div>
                 <div class="stat-card-label">{{ t('avg_check') }}</div>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-card-icon purple">🏷️</div>
+            <div class="stat-card-icon purple">{{ icon('tag')|safe }}</div>
             <div class="stat-card-body">
                 <div class="stat-card-value">{{ summary.products_count }}</div>
                 <div class="stat-card-label">{{ t('stat_products_admin') }}</div>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-card-icon pink">⭐</div>
+            <div class="stat-card-icon pink">{{ icon('star')|safe }}</div>
             <div class="stat-card-body">
                 <div class="stat-card-value">{{ summary.reviews_count }}</div>
                 <div class="stat-card-label">{{ t('stat_reviews') }}</div>

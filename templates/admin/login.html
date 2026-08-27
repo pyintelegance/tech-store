@@ -9,7 +9,7 @@
 </head>
 <body class="login-body">
     <div class="login-box">
-        <div class="login-icon">🔐</div>
+        <div class="login-icon">{{ icon('lock')|safe }}</div>
         <h1 class="login-title">{{ t('login_title') }}</h1>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}

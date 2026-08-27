@@ -5,17 +5,22 @@
     width: 230px; background: #0f172a; color: #e2e8f0;
     display: flex; flex-direction: column; padding: 20px 14px; position: sticky; top: 0; height: 100vh;
 }
-.admin-logo { font-size: 16px; font-weight: 800; color: #fff; text-decoration: none; padding: 8px 10px 20px; }
+.admin-logo { font-size: 16px; font-weight: 800; color: #fff; text-decoration: none; padding: 8px 10px 20px; display: flex; align-items: center; gap: 8px; }
+.admin-logo svg { width: 18px; height: 18px; }
 .admin-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-.admin-nav-link { color: #cbd5e1; text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; }
+.admin-nav-link { color: #cbd5e1; text-decoration: none; padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 9px; }
+.admin-nav-link svg { width: 17px; height: 17px; flex-shrink: 0; opacity: .8; }
 .admin-nav-link:hover { background: #1e293b; color: #fff; }
+.admin-nav-link:hover svg { opacity: 1; }
 .admin-nav-link.logout { color: #fca5a5; }
 .admin-sidebar-bottom { border-top: 1px solid #1e293b; padding-top: 12px; display: flex; flex-direction: column; gap: 2px; }
 
 .admin-main { flex: 1; padding: 24px 32px 48px; }
 .admin-topbar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
-.admin-user { font-size: 14px; color: #64748b; }
-.admin-title { font-size: 24px; font-weight: 800; margin: 0; }
+.admin-user { font-size: 14px; color: #64748b; display: flex; align-items: center; gap: 8px; }
+.admin-user svg { width: 17px; height: 17px; }
+.admin-title { font-size: 24px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 10px; }
+.admin-title svg { width: 22px; height: 22px; color: #2563eb; }
 .admin-title .count { color: #94a3b8; font-size: 18px; }
 .admin-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
 
@@ -97,7 +102,8 @@
 /* Login page */
 .login-body { background: #0f172a; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
 .login-box { background: #fff; border-radius: 16px; padding: 40px 36px; width: 100%; max-width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
-.login-icon { font-size: 44px; text-align: center; margin-bottom: 8px; }
+.login-icon { text-align: center; margin-bottom: 12px; color: #2563eb; display: flex; justify-content: center; }
+.login-icon svg { width: 44px; height: 44px; }
 .login-title { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 24px; }
 .login-form .field { margin-bottom: 16px; }
 .login-back { display: block; text-align: center; margin-top: 16px; color: #64748b; font-size: 13px; text-decoration: none; }
@@ -105,12 +111,13 @@
 /* Dashboard */
 .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
 .stat-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(15,23,42,.06); padding: 20px; display: flex; align-items: center; gap: 16px; }
-.stat-card-icon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; flex-shrink: 0; }
-.stat-card-icon.blue { background: linear-gradient(135deg,#2563eb,#1d4ed8); }
-.stat-card-icon.green { background: linear-gradient(135deg,#16a34a,#15803d); }
-.stat-card-icon.orange { background: linear-gradient(135deg,#f59e0b,#d97706); }
-.stat-card-icon.purple { background: linear-gradient(135deg,#7c3aed,#6d28d9); }
-.stat-card-icon.pink { background: linear-gradient(135deg,#ec4899,#db2777); }
+.stat-card-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+.stat-card-icon svg { width: 22px; height: 22px; }
+.stat-card-icon.blue { background: #2563eb; }
+.stat-card-icon.green { background: #16a34a; }
+.stat-card-icon.orange { background: #d97706; }
+.stat-card-icon.purple { background: #7c3aed; }
+.stat-card-icon.pink { background: #ec4899; }
 .stat-card-value { font-size: 24px; font-weight: 800; }
 .stat-card-label { font-size: 12.5px; color: #64748b; }
 

@@ -54,6 +54,10 @@ def get_products(filters=None):
     if f.get("max_price"):
         where.append("p.price <= %s")
         params.append(f["max_price"])
+    if f.get("in_stock") in ("1", "true", "True"):
+        where.append("p.stock > 0")
+    if f.get("on_sale") in ("1", "true", "True"):
+        where.append("p.old_price IS NOT NULL AND p.old_price > p.price")
 
     order_map = {
         "popular": "ORDER BY p.reviews DESC, p.id ASC",
@@ -113,7 +117,10 @@ def get_products_by_ids(ids):
         return []
     placeholders = ",".join(["%s"] * len(ids))
     return db.fetch_all(
-        f"SELECT * FROM products WHERE id IN ({placeholders})", tuple(ids)
+        f"""SELECT p.*, c.slug AS cat_slug, c.icon AS cat_icon, c.name_ru AS cat_ru, c.name_uz AS cat_uz
+            FROM products p LEFT JOIN categories c ON c.id = p.category_id
+            WHERE p.id IN ({placeholders})""",
+        tuple(ids),
     )
 
 
@@ -471,6 +478,72 @@ def admin_has_permission(admin, permission):
         except Exception:
             perms = []
     return permission in perms
+
+
+# ---------- Пользователи ----------
+
+def get_user_items(user_id, item_type):
+    """Возвращает словарь {product_id: qty} для типа (cart/wish/compare)."""
+    rows = db.fetch_all(
+        "SELECT product_id, qty FROM user_items WHERE user_id=%s AND item_type=%s",
+        (user_id, item_type),
+    )
+    return {int(r["product_id"]): int(r["qty"]) for r in rows}
+
+
+def set_user_item(user_id, product_id, item_type, qty=1):
+    """Вставить или обновить товар в user_items."""
+    return db.execute(
+        """INSERT INTO user_items (user_id, product_id, item_type, qty)
+           VALUES (%s,%s,%s,%s)
+           ON CONFLICT (user_id, product_id, item_type)
+           DO UPDATE SET qty = EXCLUDED.qty""",
+        (user_id, product_id, item_type, qty),
+    )
+
+
+def delete_user_item(user_id, product_id, item_type):
+    return db.execute(
+        "DELETE FROM user_items WHERE user_id=%s AND product_id=%s AND item_type=%s",
+        (user_id, product_id, item_type),
+    )
+
+
+def clear_user_items(user_id, item_type):
+    return db.execute(
+        "DELETE FROM user_items WHERE user_id=%s AND item_type=%s",
+        (user_id, item_type),
+    )
+
+
+def get_user_by_username(username):
+    return db.fetch_one("SELECT * FROM users WHERE username=%s", (username,))
+
+
+def get_user_by_id(user_id):
+    return db.fetch_one(
+        "SELECT id, username, email, created_at FROM users WHERE id=%s", (user_id,)
+    )
+
+
+def create_user(username, password_hash, email=None):
+    return db.execute_returning(
+        "INSERT INTO users (username, password_hash, email) VALUES (%s,%s,%s) RETURNING id",
+        (username, password_hash, email or None),
+    )
+
+
+def get_user_orders(user_id, limit=50):
+    return db.fetch_all(
+        "SELECT * FROM orders WHERE user_id=%s ORDER BY id DESC LIMIT %s",
+        (user_id, limit),
+    )
+
+
+def update_order_user(order_id, user_id):
+    return db.execute(
+        "UPDATE orders SET user_id=%s WHERE id=%s", (user_id, order_id)
+    )
 
 
 # ---------- Аналитика ----------

@@ -2,28 +2,28 @@
 {% block title %}{{ t('order_title') }} — {{ t('brand') }}{% endblock %}
 {% block content %}
 <div class="container narrow">
-    <h1 class="page-title">📦 {{ t('order_title') }}</h1>
+    <h1 class="page-title">{{ icon('box')|safe }} {{ t('order_title') }}</h1>
 
-    {% if errors %}<div class="alert error">{% for e in errors %}<div>⚠️ {{ e }}</div>{% endfor %}</div>{% endif %}
+    {% if errors %}<div class="alert error">{% for e in errors %}<div>{{ icon('check')|safe }} {{ e }}</div>{% endfor %}</div>{% endif %}
 
     <form method="post" class="checkout-form" id="checkout-form">
         {{ form.hidden_tag() }}
         <div class="panel reveal">
             <h3 class="panel-title"><span class="step-num">1</span> {{ t('your_info') }}</h3>
             <div class="field">
-                <label for="name">👤 {{ t('name') }} *</label>
+                <label for="name">{{ t('name') }} *</label>
                 {{ form.name(id="name", placeholder=t('name'), class="input") }}
             </div>
             <div class="field">
-                <label for="phone">📞 {{ t('phone') }} *</label>
+                <label for="phone">{{ icon('phone')|safe }} {{ t('phone') }} *</label>
                 {{ form.phone(id="phone", placeholder="+998 90 000 00 00", class="input") }}
             </div>
             <div class="field">
-                <label for="email">📧 Email ({{ t('optional_field') }})</label>
+                <label for="email">Email ({{ t('optional_field') }})</label>
                 {{ form.email(id="email", placeholder="client@example.com", class="input") }}
             </div>
             <div class="field">
-                <label for="city">🏙️ {{ t('city') }} *</label>
+                <label for="city">{{ icon('city')|safe }} {{ t('city') }} *</label>
                 <select id="city" name="city" class="input" required>
                     <option value="">{{ t('city_placeholder') }}</option>
                     {% for c in cities %}
@@ -35,15 +35,15 @@
                 </select>
             </div>
             <div class="field">
-                <label for="address">📍 {{ t('address') }} *</label>
+                <label for="address">{{ icon('city')|safe }} {{ t('address') }} *</label>
                 {{ form.address(id="address", placeholder=t('address_ph'), class="input") }}
             </div>
             <div class="field">
-                <label for="address2">➕ {{ t('address2') }}</label>
+                <label for="address2">{{ t('address2') }}</label>
                 {{ form.address2(id="address2", placeholder=t('address2_ph'), class="input") }}
             </div>
             <div class="field">
-                <label for="coupon">🎟️ {{ t('coupon') }}</label>
+                <label for="coupon">{{ icon('ticket')|safe }} {{ t('coupon') }}</label>
                 <div class="coupon-row">
                     {{ form.coupon(id="coupon", placeholder=t('coupon_ph'), class="input") }}
                 </div>
@@ -62,20 +62,20 @@
                 <span>{{ t('items_total') }}</span><span>{{ total|money }} UZS</span>
             </div>
             <div class="order-line discount-line" id="discount-line" style="display:none">
-                <span>🎟️ {{ t('coupon') }} <b id="coupon-code-label"></b></span>
+                <span>{{ icon('ticket')|safe }} {{ t('coupon') }} <b id="coupon-code-label"></b></span>
                 <span class="discount-value" id="discount-value">−0 UZS</span>
             </div>
             <div class="order-line delivery-line">
-                <span>🚚 {{ t('delivery') }} <span class="delivery-meta" id="delivery-meta"></span></span>
+                <span>{{ icon('truck')|safe }} {{ t('delivery') }} <span class="delivery-meta" id="delivery-meta"></span></span>
                 <span id="delivery-price">—</span>
             </div>
             <div class="order-line total-row">
                 <span>{{ t('total') }}</span><span id="grand-total">{{ total|money }} UZS</span>
             </div>
-            <div class="pay-note">💵 {{ t('pay_on_delivery') }}</div>
+            <div class="pay-note">{{ icon('money')|safe }} {{ t('pay_on_delivery') }}</div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block btn-lg reveal">✅ {{ t('place_order') }}</button>
+        <button type="submit" class="btn btn-primary btn-block btn-lg reveal">{{ icon('check')|safe }} {{ t('place_order') }}</button>
         <a href="{{ url_for('cart') }}" class="btn btn-block reveal">← {{ t('back_cart') }}</a>
     </form>
 </div>

@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container narrow">
     <div class="empty">
-        <div class="empty-icon">🤔</div>
+        <div class="empty-icon">{{ icon('search')|safe }}</div>
         <h3>404</h3>
         <p>{{ t('not_found') }}</p>
         <a href="{{ url_for('index') }}" class="btn btn-primary">{{ t('error_hint') }}</a>

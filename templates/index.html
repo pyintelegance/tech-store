@@ -4,11 +4,11 @@
 <section class="hero">
     <div class="container hero-inner">
         <div class="hero-text">
-            <div class="hero-badge">✨ {{ t('hero_badge') }}</div>
+            <div class="hero-badge">{{ icon('diamond')|safe }} {{ t('hero_badge') }}</div>
             <h1 class="hero-title">{{ t('hero_title') }} <em>{{ t('hero_title_accent') }}</em></h1>
             <p class="hero-sub">{{ t('hero_sub') }}</p>
             <div class="hero-btns">
-                <a href="#catalog" class="hero-cta">🛍️ {{ t('hero_cta') }}</a>
+                <a href="#catalog" class="hero-cta">{{ icon('bag')|safe }} {{ t('hero_cta') }}</a>
                 <a href="#features" class="hero-ghost">{{ t('hero_ghost') }}</a>
             </div>
             <div class="hero-stats">
@@ -18,10 +18,10 @@
             </div>
         </div>
         <div class="hero-card">
-            <div class="hero-card-title">💎 {{ t('card_guarantee') }}</div>
-            <div class="hero-card-item"><span class="hci-icon">📱</span><span>{{ t('feature1_text') }}</span></div>
-            <div class="hero-card-item"><span class="hci-icon">🚚</span><span>{{ t('feature2_text') }}</span></div>
-            <div class="hero-card-item"><span class="hci-icon">💵</span><span>{{ t('feature3_text') }}</span></div>
+            <div class="hero-card-title">{{ icon('shield')|safe }} {{ t('card_guarantee') }}</div>
+            <div class="hero-card-item"><span class="hci-icon">{{ icon('check')|safe }}</span><span>{{ t('feature1_text') }}</span></div>
+            <div class="hero-card-item"><span class="hci-icon">{{ icon('truck')|safe }}</span><span>{{ t('feature2_text') }}</span></div>
+            <div class="hero-card-item"><span class="hci-icon">{{ icon('money')|safe }}</span><span>{{ t('feature3_text') }}</span></div>
         </div>
     </div>
     <div class="hero-flow"></div>
@@ -29,12 +29,12 @@
 
 <div class="container section" id="catalog">
     <div class="section-head reveal">
-        <h2 class="section-title">{{ t('categories') }} <span class="accent">📁</span></h2>
+        <h2 class="section-title">{{ t('categories') }}</h2>
     </div>
     <div class="cat-cards">
         {% for c in categories %}
         <a href="{{ url_for('index', category=c.id) }}" class="cat-card reveal">
-            <div class="cat-card-icon">{{ c.icon }}</div>
+            <div class="cat-card-icon">{{ cat_icon(c.slug)|safe }}</div>
             <div class="cat-card-name">{{ c.name_ru if lang=='ru' else c.name_uz }}</div>
         </a>
         {% endfor %}
@@ -80,10 +80,10 @@
             <form method="post" action="{{ url_for('wishlist_toggle') }}" class="wish-form" data-wishpid="{{ p.id }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="product_id" value="{{ p.id }}">
-                <button type="submit" class="wish-btn" title="{{ t('wishlist') }}">♡</button>
+                <button type="submit" class="wish-btn" title="{{ t('wishlist') }}">{{ icon('bookmark')|safe }}</button>
             </form>
             <div class="card-body">
-                <div class="card-cat">{{ p.cat_icon }} {{ p.cat_ru if lang=='ru' else p.cat_uz }}</div>
+                <div class="card-cat">{{ cat_icon(p.cat_slug)|safe }} {{ p.cat_ru if lang=='ru' else p.cat_uz }}</div>
                 <a href="{{ url_for('product', pid=p.id) }}" class="card-title">
                     {{ p['name_ru'] if lang=='ru' else p['name_uz'] }}
                 </a>
@@ -124,7 +124,7 @@
     {% endif %}
     {% else %}
     <div class="empty">
-        <div class="empty-icon">🔍</div>
+        <div class="empty-icon">{{ icon('search')|safe }}</div>
         <h3>{{ t('empty_catalog') }}</h3>
         <p>{{ t('empty_catalog_hint') }}</p>
     </div>
@@ -138,10 +138,10 @@
             <span class="section-more">{{ t('features_sub') }}</span>
         </div>
         <div class="features-grid">
-            <div class="feature reveal"><div class="feature-icon">✅</div><div class="feature-title">{{ t('feature1_title') }}</div><div class="feature-text">{{ t('feature1_text') }}</div></div>
-            <div class="feature reveal"><div class="feature-icon">🚚</div><div class="feature-title">{{ t('feature2_title') }}</div><div class="feature-text">{{ t('feature2_text') }}</div></div>
-            <div class="feature reveal"><div class="feature-icon">💵</div><div class="feature-title">{{ t('feature3_title') }}</div><div class="feature-text">{{ t('feature3_text') }}</div></div>
-            <div class="feature reveal"><div class="feature-icon">🎧</div><div class="feature-title">{{ t('feature4_title') }}</div><div class="feature-text">{{ t('feature4_text') }}</div></div>
+            <div class="feature reveal"><div class="feature-icon">{{ icon('check')|safe }}</div><div class="feature-title">{{ t('feature1_title') }}</div><div class="feature-text">{{ t('feature1_text') }}</div></div>
+            <div class="feature reveal"><div class="feature-icon">{{ icon('truck')|safe }}</div><div class="feature-title">{{ t('feature2_title') }}</div><div class="feature-text">{{ t('feature2_text') }}</div></div>
+            <div class="feature reveal"><div class="feature-icon">{{ icon('money')|safe }}</div><div class="feature-title">{{ t('feature3_title') }}</div><div class="feature-text">{{ t('feature3_text') }}</div></div>
+            <div class="feature reveal"><div class="feature-icon">{{ icon('headphones')|safe }}</div><div class="feature-title">{{ t('feature4_title') }}</div><div class="feature-text">{{ t('feature4_text') }}</div></div>
         </div>
     </div>
 </section>

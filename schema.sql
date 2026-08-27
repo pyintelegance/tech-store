@@ -10,6 +10,25 @@ DROP TABLE IF EXISTS cities;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS categories;
 DROP TABLE IF EXISTS admins;
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    email VARCHAR(200),
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE TABLE user_items (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    item_type VARCHAR(20) NOT NULL,
+    qty INTEGER NOT NULL DEFAULT 1,
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    UNIQUE (user_id, product_id, item_type)
+);
 
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
@@ -53,6 +72,7 @@ CREATE TABLE cities (
 
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     customer_name VARCHAR(200) NOT NULL,
     phone VARCHAR(50) NOT NULL,
     email VARCHAR(200),

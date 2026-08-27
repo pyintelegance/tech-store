@@ -11,26 +11,26 @@
 <body class="admin-body">
     <div class="admin-wrap">
         <aside class="admin-sidebar">
-            <a href="{{ url_for('admin_panel') }}" class="admin-logo">🛠️ TechStore Admin</a>
+            <a href="{{ url_for('admin_panel') }}" class="admin-logo">{{ icon('settings')|safe }} TechStore Admin</a>
             <nav class="admin-nav">
-                {% if admin_is_super or 'dashboard' in admin_permissions %}<a href="{{ url_for('admin_dashboard') }}" class="admin-nav-link">📊 {{ t('dashboard') }}</a>{% endif %}
-                {% if admin_is_super or 'orders' in admin_permissions %}<a href="{{ url_for('admin_orders') }}" class="admin-nav-link">📦 {{ t('orders') }}</a>{% endif %}
-                {% if admin_is_super or 'products' in admin_permissions %}<a href="{{ url_for('admin_products') }}" class="admin-nav-link">🏷️ {{ t('products') }}</a>{% endif %}
-                {% if admin_is_super or 'reviews' in admin_permissions %}<a href="{{ url_for('admin_reviews') }}" class="admin-nav-link">⭐ {{ t('reviews') }}</a>{% endif %}
-                {% if admin_is_super or 'coupons' in admin_permissions %}<a href="{{ url_for('admin_coupons') }}" class="admin-nav-link">🎟️ {{ t('coupons_list') }}</a>{% endif %}
-                {% if admin_is_super or 'categories' in admin_permissions %}<a href="{{ url_for('admin_categories') }}" class="admin-nav-link">🗂️ {{ t('categories') }}</a>{% endif %}
-                {% if admin_is_super or 'cities' in admin_permissions %}<a href="{{ url_for('admin_cities') }}" class="admin-nav-link">🚚 {{ t('cities') }}</a>{% endif %}
-                {% if admin_is_super %}<a href="{{ url_for('admin_admins') }}" class="admin-nav-link">👥 {{ t('admins_title') }}</a>{% endif %}
+                {% if admin_is_super or 'dashboard' in admin_permissions %}<a href="{{ url_for('admin_dashboard') }}" class="admin-nav-link">{{ icon('chart')|safe }} {{ t('dashboard') }}</a>{% endif %}
+                {% if admin_is_super or 'orders' in admin_permissions %}<a href="{{ url_for('admin_orders') }}" class="admin-nav-link">{{ icon('box')|safe }} {{ t('orders') }}</a>{% endif %}
+                {% if admin_is_super or 'products' in admin_permissions %}<a href="{{ url_for('admin_products') }}" class="admin-nav-link">{{ icon('tag')|safe }} {{ t('products') }}</a>{% endif %}
+                {% if admin_is_super or 'reviews' in admin_permissions %}<a href="{{ url_for('admin_reviews') }}" class="admin-nav-link">{{ icon('star')|safe }} {{ t('reviews') }}</a>{% endif %}
+                {% if admin_is_super or 'coupons' in admin_permissions %}<a href="{{ url_for('admin_coupons') }}" class="admin-nav-link">{{ icon('ticket')|safe }} {{ t('coupons_list') }}</a>{% endif %}
+                {% if admin_is_super or 'categories' in admin_permissions %}<a href="{{ url_for('admin_categories') }}" class="admin-nav-link">{{ icon('list')|safe }} {{ t('categories') }}</a>{% endif %}
+                {% if admin_is_super or 'cities' in admin_permissions %}<a href="{{ url_for('admin_cities') }}" class="admin-nav-link">{{ icon('truck')|safe }} {{ t('cities') }}</a>{% endif %}
+                {% if admin_is_super %}<a href="{{ url_for('admin_admins') }}" class="admin-nav-link">{{ icon('user')|safe }} {{ t('admins_title') }}</a>{% endif %}
             </nav>
             <div class="admin-sidebar-bottom">
-                <a href="{{ url_for('index') }}" class="admin-nav-link">🌐 {{ t('back') }}</a>
-                <a href="{{ url_for('logout') }}" class="admin-nav-link logout">↪ {{ t('logout') }}</a>
+                <a href="{{ url_for('index') }}" class="admin-nav-link">{{ icon('globe')|safe }} {{ t('back') }}</a>
+                <a href="{{ url_for('logout') }}" class="admin-nav-link logout">{{ icon('edit')|safe }} {{ t('logout') }}</a>
             </div>
         </aside>
         <main class="admin-main">
             <div class="admin-topbar">
-                <span class="admin-user">{{ t('admin') }}: <strong>{{ admin_username }}</strong>
-                    {% if admin_is_super %}<span class="status-pill status-processing" style="margin-left:8px">👑 {{ t('role_superadmin') }}</span>{% else %}<span class="status-pill status-new" style="margin-left:8px">{{ t('role_manager') }}</span>{% endif %}
+                <span class="admin-user">{{ icon('user')|safe }} {{ t('admin') }}: <strong>{{ admin_username }}</strong>
+                    {% if admin_is_super %}<span class="status-pill status-processing" style="margin-left:8px">{{ icon('crown')|safe }} {{ t('role_superadmin') }}</span>{% else %}<span class="status-pill status-new" style="margin-left:8px">{{ t('role_manager') }}</span>{% endif %}
                 </span>
             </div>
             {% with messages = get_flashed_messages(with_categories=true) %}

@@ -2,7 +2,7 @@
 {% block title %}{{ t('wishlist_title') }} — {{ t('brand') }}{% endblock %}
 {% block content %}
 <div class="container">
-    <h1 class="page-title">❤️ {{ t('wishlist_title') }}</h1>
+    <h1 class="page-title">{{ icon('bookmark')|safe }} {{ t('wishlist_title') }}</h1>
 
     {% if products %}
     <div class="grid">
@@ -14,10 +14,10 @@
             <form method="post" action="{{ url_for('wishlist_toggle') }}" class="wish-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="product_id" value="{{ p.id }}">
-                <button type="submit" class="wish-btn active" title="{{ t('remove_wish') }}">♥</button>
+                <button type="submit" class="wish-btn active" title="{{ t('remove_wish') }}">{{ icon('bookmark-fill')|safe }}</button>
             </form>
             <div class="card-body">
-                <div class="card-cat">{{ p.cat_icon }} {{ p.cat_ru if lang=='ru' else p.cat_uz }}</div>
+                <div class="card-cat">{{ cat_icon(p.cat_slug)|safe }} {{ p.cat_ru if lang=='ru' else p.cat_uz }}</div>
                 <a href="{{ url_for('product', pid=p.id) }}" class="card-title">{{ p['name_ru'] if lang=='ru' else p['name_uz'] }}</a>
                 <div class="card-rating">★ {{ p.rating }} <span class="muted">({{ p.reviews }})</span></div>
                 <div class="card-price-row">
@@ -36,7 +36,7 @@
     </div>
     {% else %}
     <div class="empty">
-        <div class="empty-icon">💔</div>
+        <div class="empty-icon">{{ icon('bookmark')|safe }}</div>
         <h3>{{ t('wishlist_empty') }}</h3>
         <p>{{ t('wishlist_empty_hint') }}</p>
         <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">{{ t('go_catalog') }}</a>

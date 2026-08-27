@@ -21,7 +21,7 @@
     </div>
 
     <div class="panel">
-        <h3 class="panel-title">📋 {{ t('order_details') }}</h3>
+        <h3 class="panel-title">{{ icon('list')|safe }} {{ t('order_details') }}</h3>
         {% for it in items %}
         <div class="order-line">
             <span>{{ it.product_name }} × {{ it.quantity }}</span>
@@ -29,12 +29,12 @@
         </div>
         {% endfor %}
         {% if order.coupon_code %}
-        <div class="order-line"><span>🎟️ {{ order.coupon_code }}</span><span>−{{ order.discount|money }} UZS</span></div>
+        <div class="order-line"><span>{{ icon('ticket')|safe }} {{ order.coupon_code }}</span><span>−{{ order.discount|money }} UZS</span></div>
         {% endif %}
-        <div class="order-line"><span>🚚 {{ t('delivery') }}</span><span>{{ order.delivery_price|money }} UZS · {{ order.delivery_minutes }} {{ t('minutes') }}</span></div>
+        <div class="order-line"><span>{{ icon('truck')|safe }} {{ t('delivery') }}</span><span>{{ order.delivery_price|money }} UZS · {{ order.delivery_minutes }} {{ t('minutes') }}</span></div>
         <div class="order-line total-row"><span>{{ t('total') }}</span><span>{{ order.total|money }} UZS</span></div>
-        <div class="order-line"><span>📍 {{ order.city }}, {{ order.address }}{% if order.address2 %} ({{ order.address2 }}){% endif %}</span></div>
-        <div class="pay-note">💵 {{ t('pay_on_delivery') }}</div>
+        <div class="order-line"><span>{{ icon('city')|safe }} {{ order.city }}, {{ order.address }}{% if order.address2 %} ({{ order.address2 }}){% endif %}</span></div>
+        <div class="pay-note">{{ icon('money')|safe }} {{ t('pay_on_delivery') }}</div>
     </div>
 
     <a href="{{ url_for('index') }}" class="btn btn-block">{{ t('continue_shopping') }}</a>

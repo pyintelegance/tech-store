@@ -5,7 +5,7 @@
     <div class="admin-head">
         <h2 class="admin-title">{{ t('orders_list') }}</h2>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <a href="{{ url_for('admin_orders_export') }}" class="btn btn-sm">⬇️ {{ t('export_orders') }}</a>
+            <a href="{{ url_for('admin_orders_export') }}" class="btn btn-sm">{{ icon('download')|safe }} {{ t('export_orders') }}</a>
         </div>
     </div>
     <div class="status-tabs" style="margin-bottom:16px">
@@ -25,7 +25,7 @@
             </div>
             <div class="admin-order-body">
                 <div class="admin-order-row"><span>{{ t('date') }}</span><span>{{ o.order.created_at.strftime('%d.%m.%Y %H:%M') }}</span></div>
-                <div class="admin-order-row"><span>{{ t('customer') }}</span><span>{{ o.order.customer_name }} · {{ o.order.phone }}{% if o.order.email %}<br>📧 {{ o.order.email }}{% endif %}</span></div>
+                <div class="admin-order-row"><span>{{ t('customer') }}</span><span>{{ o.order.customer_name }} · {{ o.order.phone }}{% if o.order.email %}<br>{{ icon('mail')|safe }} {{ o.order.email }}{% endif %}</span></div>
                 <div class="admin-order-row"><span>{{ t('city') }}</span><span>{{ o.order.city }}</span></div>
                 <div class="admin-order-row"><span>{{ t('address') }}</span><span>{{ o.order.address }}{% if o.order.address2 %} ({{ o.order.address2 }}){% endif %}</span></div>
                 <div class="admin-order-row"><span>{{ t('delivery') }}</span><span>{{ o.order.delivery_price|money }} UZS · {{ o.order.delivery_minutes }} {{ t('minutes') }}</span></div>
@@ -35,7 +35,7 @@
                     {% endfor %}
                 </div>
                 {% if o.order.coupon_code %}
-                <div class="admin-order-total">🎟️ {{ o.order.coupon_code }}: −{{ o.order.discount|money }} UZS</div>
+                <div class="admin-order-total">{{ icon('ticket')|safe }} {{ o.order.coupon_code }}: −{{ o.order.discount|money }} UZS</div>
                 {% endif %}
                 <div class="admin-order-total">{{ t('total') }}: <strong>{{ o.order.total|money }} UZS</strong></div>
             </div>
@@ -51,7 +51,7 @@
         {% endfor %}
     </div>
     {% else %}
-    <div class="empty"><div class="empty-icon">📦</div><h3>{{ t('orders') }} — 0</h3></div>
+    <div class="empty"><div class="empty-icon">{{ icon('box')|safe }}</div><h3>{{ t('orders') }} — 0</h3></div>
     {% endif %}
 </div>
 {% endblock %}

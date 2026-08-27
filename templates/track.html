@@ -2,7 +2,7 @@
 {% block title %}{{ t('track_title') }} — {{ t('brand') }}{% endblock %}
 {% block content %}
 <div class="container narrow">
-    <h1 class="page-title">📦 {{ t('track_title') }}</h1>
+    <h1 class="page-title">{{ icon('box')|safe }} {{ t('track_title') }}</h1>
     <p class="track-hint">{{ t('track_hint') }}</p>
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
@@ -12,7 +12,7 @@
     <form method="post" class="track-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="text" name="order_id" placeholder="{{ t('track_ph') }}" class="input track-input" inputmode="numeric">
-        <button type="submit" class="btn btn-primary btn-lg">🔍 {{ t('track_btn') }}</button>
+        <button type="submit" class="btn btn-primary btn-lg">{{ icon('search')|safe }} {{ t('track_btn') }}</button>
     </form>
 </div>
 {% endblock %}

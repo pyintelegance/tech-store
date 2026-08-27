@@ -2,7 +2,7 @@
 {% block title %}{{ t('cart') }} — {{ t('brand') }}{% endblock %}
 {% block content %}
 <div class="container">
-    <h1 class="page-title">🛒 {{ t('cart_title') }}</h1>
+    <h1 class="page-title">{{ icon('cart')|safe }} {{ t('cart_title') }}</h1>
 
     {% if items %}
     <div class="cart-layout">
@@ -38,12 +38,12 @@
             </div>
             <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-block btn-lg">➜ {{ t('checkout') }}</a>
             <a href="{{ url_for('index') }}" class="btn btn-block">{{ t('continue_shopping') }}</a>
-            <div class="pay-note">💵 {{ t('pay_on_delivery') }}</div>
+            <div class="pay-note">{{ icon('money')|safe }} {{ t('pay_on_delivery') }}</div>
         </div>
     </div>
     {% else %}
     <div class="empty">
-        <div class="empty-icon">🛒</div>
+        <div class="empty-icon">{{ icon('cart')|safe }}</div>
         <h3>{{ t('cart_empty') }}</h3>
         <p>{{ t('cart_empty_hint') }}</p>
         <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">{{ t('go_catalog') }}</a>

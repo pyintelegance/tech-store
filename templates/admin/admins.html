@@ -3,8 +3,8 @@
 {% block content %}
 <div class="admin-content">
     <div class="admin-head">
-        <h2 class="admin-title">👥 {{ t('admins_title') }}</h2>
-        <a href="{{ url_for('admin_admin_new') }}" class="btn btn-primary">+ {{ t('add_admin') }}</a>
+        <h2 class="admin-title">{{ icon('user')|safe }} {{ t('admins_title') }}</h2>
+        <a href="{{ url_for('admin_admin_new') }}" class="btn btn-primary">{{ icon('plus')|safe }} {{ t('add_admin') }}</a>
     </div>
     <div class="admin-table">
         <table>
@@ -18,7 +18,7 @@
                     <td><strong>{{ a.username }}</strong></td>
                     <td>
                         {% if a.role == 'superadmin' %}
-                        <span class="status-pill status-processing">👑 {{ t('role_superadmin') }}</span>
+                        <span class="status-pill status-processing">{{ icon('crown')|safe }} {{ t('role_superadmin') }}</span>
                         {% else %}
                         <span class="status-pill status-new">{{ t('role_manager') }}</span>
                         {% endif %}

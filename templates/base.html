@@ -12,15 +12,15 @@
 <body>
     <div class="topbar">
         <div class="container topbar-inner">
-            <span class="topbar-item">🚚 {{ t('topbar_delivery') }}</span>
-            <span class="topbar-item">🔒 {{ t('topbar_secure') }}</span>
+            <span class="topbar-item">{{ icon('truck')|safe }} {{ t('topbar_delivery') }}</span>
+            <span class="topbar-item">{{ icon('lock')|safe }} {{ t('topbar_secure') }}</span>
         </div>
     </div>
 
     <header class="header">
         <div class="container header-inner">
             <a href="{{ url_for('index') }}" class="logo">
-                <span class="logo-mark">🛒</span>
+                <span class="logo-mark">{{ icon('bag')|safe }}</span>
                 <span class="logo-text">{{ t('brand') }}</span>
             </a>
             <form class="search" action="{{ url_for('index') }}" method="get">
@@ -31,12 +31,12 @@
             <nav class="nav">
                 <a href="{{ url_for('about') }}" class="nav-link">{{ t('about') }}</a>
                 <a href="{{ url_for('wishlist') }}" class="nav-link cart-link">
-                    <span class="cart-icon">❤️</span>
+                    <span class="cart-icon">{{ icon('bookmark')|safe }}</span>
                     <span class="cart-label">{{ t('wishlist') }}</span>
                     {% if wish_count %}<span class="cart-badge wish-badge">{{ wish_count }}</span>{% endif %}
                 </a>
                 <a href="{{ url_for('cart') }}" class="nav-link cart-link">
-                    <span class="cart-icon">🛒</span>
+                    <span class="cart-icon">{{ icon('cart')|safe }}</span>
                     <span class="cart-label">{{ t('cart') }}</span>
                     {% if cart_count %}<span class="cart-badge">{{ cart_count }}</span>{% endif %}
                 </a>
@@ -44,9 +44,9 @@
                     <a href="{{ url_for('set_lang', lang='ru') }}" class="lang-btn{% if lang=='ru' %} active{% endif %}">Рус</a>
                     <a href="{{ url_for('set_lang', lang='uz') }}" class="lang-btn{% if lang=='uz' %} active{% endif %}">Uzb</a>
                 </div>
-                <button type="button" class="theme-toggle" id="theme-toggle" title="Тема">🌙</button>
+                <button type="button" class="theme-toggle" id="theme-toggle" title="Тема"></button>
                 {% if admin_logged_in %}
-                <a href="{{ url_for('admin_orders') }}" class="nav-link admin-link">🛠️</a>
+                <a href="{{ url_for('admin_orders') }}" class="nav-link admin-link">{{ icon('settings')|safe }}</a>
                 {% endif %}
             </nav>
         </div>
@@ -55,7 +55,7 @@
                 <a href="{{ url_for('index') }}" class="{% if not active_category %}active{% endif %}">{{ t('all') }}</a>
                 {% for c in categories %}
                 <a href="{{ url_for('index', category=c.id, q=q, sort=sort) }}" class="{% if active_category == c.id|string %}active{% endif %}">
-                    {{ c.icon }} {{ c.name_ru if lang=='ru' else c.name_uz }}
+                    {{ cat_icon(c.slug)|safe }} {{ c.name_ru if lang=='ru' else c.name_uz }}
                 </a>
                 {% endfor %}
             </div>
@@ -79,7 +79,7 @@
         <div class="container">
             <div class="footer-grid">
                 <div>
-                    <div class="footer-brand">🛒 {{ t('brand') }}</div>
+                    <div class="footer-brand">{{ icon('bag')|safe }} {{ t('brand') }}</div>
                     <p class="footer-desc">{{ t('tagline') }}</p>
                 </div>
                 <div>
@@ -106,7 +106,7 @@
             </div>
             <div class="footer-bottom">
                 <span>{{ t('footer_text') }}</span>
-                <span>🛒 {{ t('brand') }} 2026</span>
+                <span>{{ t('brand') }} 2026</span>
             </div>
         </div>
     </footer>
@@ -116,7 +116,7 @@
     <div class="toast-container" id="toast-container"></div>
     {% if cart_count %}
     <a href="{{ url_for('cart') }}" class="mobile-cart">
-        <span class="mobile-cart-icon">🛒</span>
+        <span class="mobile-cart-icon">{{ icon('cart')|safe }}</span>
         <span class="mobile-cart-count">{{ cart_count }}</span>
         <span class="mobile-cart-label">{{ t('cart') }}</span>
     </a>
